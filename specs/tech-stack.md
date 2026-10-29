@@ -38,7 +38,7 @@ Exact versions are pinned in `pyproject.toml` and `uv.lock` when each dependency
 ## Testing policy
 - Framework: `pytest`.
 - **Test-first** for behavior: write the failing test, implement, then see it pass. Implementing first is fine only for wiring, types and configuration.
-- **Offline by default.** Tests use scripted fake models, recorded API responses, a fake engine and a fake crontab backend. No test needs network, keys or Docker, except the LeanRAG contract tests, which need the services running and are marked so they can be skipped.
+- **Offline by default.** Tests use scripted fake models, recorded API responses, a fake engine and a fake crontab backend. No test needs network, keys or Docker, except the LeanRAG contract tests, which need the services running and are marked so they can be skipped. Enforced by `pytest-socket` (`--disable-socket` in the pytest configuration).
 - Unit tests sit beside each module's concerns in `tests/`. Shared fixtures (a fixture cluster, recorded responses, a gold question set from `docs/topics.md`) live in `tests/fixtures/`.
 - Security: `tests/security/corpus/` (poisoned and benign items, including benign research about prompt injection) and `tests/security/cases/` (smoke cases). The suite grades by observed effect, never by refusal wording, and reports errors as inconclusive.
 - A phase is not done until its tests pass, its acceptance commands work, and lint, format check, type check and the full test suite pass.
@@ -46,9 +46,9 @@ Exact versions are pinned in `pyproject.toml` and `uv.lock` when each dependency
 ## Quality tooling
 - Lint: `uv run ruff check .`
 - Format: `uv run ruff format --check .`
-- Types: `uv run mypy --strict src/` (tests are type-checked with the default settings).
+- Types: `uv run mypy --strict src/` and `uv run mypy tests/` (tests are type-checked with the default settings).
 - Tests: `uv run pytest -q`
-- CI: GitHub Actions runs lint, format check, type check and tests on Python 3.12 and 3.14 for every push and pull request.
+- CI: GitHub Actions runs the same commands as local (lint, format check, both type checks and tests) on Python 3.12 and 3.14 for every push and pull request.
 
 ## Constraints
 - License: MIT. Every dependency's license must allow that, including the LGPL-3.0 `python-crontab` used as a library. A classifier model's license and download terms are checked before it becomes the default.

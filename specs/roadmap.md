@@ -9,7 +9,7 @@ Spec: specs/features/01-scaffolding/
 Goal: a packaged, installable `rkc` with the full quality toolchain and CI in place.
 - [ ] `pyproject.toml` with `requires-python >=3.12`, both console scripts, MIT license and the dev tools. Fix the scaffold's current `>=3.14` and its hello-world entry point
 - [ ] `.gitignore`, `.env.example`, `LICENSE`, `CLAUDE.md` (commands, module map, the untrusted-data, store-owns-the-facts and scan-every-hop rules)
-- [ ] `rkc --version`, `rkc --help` and a global `--json` option
+- [ ] `rkc --version`, `rkc --help`, `rkc version [--json]` and a global `--json` option
 - [ ] GitHub Actions workflow on Python 3.12 and 3.14
 Design reference: "Implementation steps > Step 1", "Naming", "Files to create".
 
