@@ -14,7 +14,7 @@
 - T1: `requires-python = ">=3.12"`. `.python-version` stays `3.14`. The build backend stays `uv_build`, bumped to its current release range (`>=0.13.6,<0.14` at spec time).
 - T2: The only runtime dependency is `typer`, pinned to its current PyPI release (checked at implementation). Dev tools `pytest`, `pytest-socket`, `ruff` and `mypy` are pinned to their current releases in a `dev` dependency group. `uv.lock` is committed.
 - T3: The version has a single source, `[project] version`, read at runtime through `importlib.metadata`. No hard-coded version string in `src/`.
-- T4: Ruff: `target-version = "py312"`, `line-length = 100`, `select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "S", "PTH"]`, with `S101` ignored under `tests/`. Format is checked with `ruff format --check`.
+- T4: Ruff: `target-version = "py312"`, `line-length = 100`, `select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "S", "PTH"]`, with `S101` ignored under `tests/` and `specs/` excluded (`extend-exclude`). Format is checked with `ruff format --check`.
 - T5: `uv run mypy --strict src/` and `uv run mypy tests/` (default settings) both pass. Strictness is not configured globally in a way that applies `--strict` to tests.
 - T6: Package metadata: description is the tagline "Agent-maintained, evidence-anchored research knowledge base"; authors list the name "Vojtěch Kubín" only, with no email; `license = "MIT"` (SPDX expression) with `license-files = ["LICENSE"]`.
 - T7: Tests are offline and need no keys or Docker. `pytest-socket` with `--disable-socket` in the pytest configuration makes any network access fail the suite, locally and in CI. Tests use Typer's `CliRunner` plus `tomllib`.
@@ -53,3 +53,5 @@
 | zizmor mode | Offline (`--offline`) | Covers pinning, permissions and credentials without a GitHub token | due diligence |
 | `uv_build` version | Bump to `>=0.13.6,<0.14` | Constitution: pin current releases; local uv 0.12.8 still fetches it | due diligence |
 | CI proof before push | actionlint, zizmor and a local Python 3.12 test run, then CI green after the owner pushes | No push from the agent; still proves 3.12 support and workflow syntax and security | spec interview; zizmor added in spec review |
+| Ruff and `specs/` | `extend-exclude = ["specs/"]` | Ruff 0.17 formats Python blocks in Markdown; specs are prose with code sketches, and the archived design must stay unchanged | implementation (group 1) |
+| `py.typed` marker | Ship an empty `src/research_knowledge_curator/py.typed` | PEP 561; without it `mypy tests/` reports `import-untyped` for the package | implementation (group 1) |
