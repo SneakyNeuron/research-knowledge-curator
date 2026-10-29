@@ -5,6 +5,7 @@ Each phase is one feature: planned with `/sdd:feature`, built with `/sdd:impleme
 Two manual spikes need the owner, network access and, for LeanRAG, real models and Docker: the classifier evaluation (phase 5) and the LeanRAG spike (phase 9). Start them early, alongside phases 1–4. Phases 7–10 depend on them.
 
 ## Phase 1: Scaffolding
+Spec: specs/features/01-scaffolding/
 Goal: a packaged, installable `rkc` with the full quality toolchain and CI in place.
 - [ ] `pyproject.toml` with `requires-python >=3.12`, both console scripts, MIT license and the dev tools. Fix the scaffold's current `>=3.14` and its hello-world entry point
 - [ ] `.gitignore`, `.env.example`, `LICENSE`, `CLAUDE.md` (commands, module map, the untrusted-data, store-owns-the-facts and scan-every-hop rules)
