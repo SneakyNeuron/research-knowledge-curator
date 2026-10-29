@@ -1,7 +1,7 @@
 # Phase 01: Scaffolding — Plan
 
 ## Context
-Roadmap phase 1. The repository holds only the constitution and a `uv init` scaffold (`requires-python >=3.14`, a hello-world `main`, no tests, no tooling). Every later phase assumes a packaged `rkc` command, the four quality gates from `specs/tech-stack.md`, and CI on every supported Python version. This phase puts that foundation in place and nothing more.
+Roadmap phase 1. The repository holds only the constitution and a `uv init` scaffold (`requires-python >=3.14`, a hello-world `main`, no tests, no tooling). Every later phase assumes a packaged `rkc` command, the quality gates from `specs/tech-stack.md` (five commands: lint, format check, `mypy --strict src/`, `mypy tests/`, tests), and CI on every supported Python version. This phase puts that foundation in place and nothing more.
 
 ## Approach
 - Add only what this phase uses. The archived design (Step 1) lists all runtime dependencies up front, but the constitution says each dependency is pinned when it is introduced, so the only runtime dependency is `typer`. Dev tools (`pytest`, `pytest-socket`, `ruff`, `mypy`) go in a `dev` dependency group.
