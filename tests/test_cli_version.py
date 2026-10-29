@@ -2,31 +2,22 @@
 
 import json
 import re
-import tomllib
-from pathlib import Path
 
 import pytest
+import typer.core
+import typer.main
 from typer.testing import CliRunner
 
 from research_knowledge_curator.cli import app
-
-PYPROJECT = Path(__file__).resolve().parent.parent / "pyproject.toml"
-
-runner = CliRunner()
-
-
-def _expected_version() -> str:
-    with PYPROJECT.open("rb") as f:
-        version: str = tomllib.load(f)["project"]["version"]
-    return version
 
 
 def _commands_listed(help_text: str) -> list[str]:
     """Return the command names in the help text's ``Commands`` panel."""
     lines = help_text.splitlines()
-    start = next(i for i, line in enumerate(lines) if "─ Commands " in line)
+    starts = [i for i, line in enumerate(lines) if "─ Commands " in line]
+    assert starts, f"no Commands panel in help text:\n{help_text}"
     names: list[str] = []
-    for line in lines[start + 1 :]:
+    for line in lines[starts[0] + 1 :]:
         if line.startswith("╰"):
             break
         match = re.match(r"│\s+(\S+)", line)
@@ -35,35 +26,43 @@ def _commands_listed(help_text: str) -> list[str]:
     return names
 
 
+def test_only_version_command_is_registered() -> None:
+    command = typer.main.get_command(app)
+    assert isinstance(command, typer.core.TyperGroup)
+    assert list(command.commands) == ["version"]
+
+
 @pytest.mark.parametrize(
     "args", [["version", "--json"], ["--json", "version"]], ids=["after", "before"]
 )
-def test_version_json_in_either_position(args: list[str]) -> None:
+def test_version_json_in_either_position(
+    runner: CliRunner, expected_version: str, args: list[str]
+) -> None:
     result = runner.invoke(app, args)
     assert result.exit_code == 0
     assert result.stderr == ""
     assert result.stdout.endswith("\n")
     assert result.stdout.count("\n") == 1
-    assert json.loads(result.stdout) == {"version": _expected_version()}
+    assert json.loads(result.stdout) == {"version": expected_version}
 
 
-def test_version_plain_is_not_json() -> None:
+def test_version_plain_is_not_json(runner: CliRunner, expected_version: str) -> None:
     result = runner.invoke(app, ["version"])
     assert result.exit_code == 0
     assert result.stderr == ""
-    assert result.stdout == f"rkc {_expected_version()}\n"
+    assert result.stdout == f"rkc {expected_version}\n"
     with pytest.raises(json.JSONDecodeError):
         json.loads(result.stdout)
 
 
-def test_version_option_ignores_json() -> None:
+def test_version_option_ignores_json(runner: CliRunner, expected_version: str) -> None:
     result = runner.invoke(app, ["--version", "--json"])
     assert result.exit_code == 0
-    assert result.stdout == f"rkc {_expected_version()}\n"
+    assert result.stdout == f"rkc {expected_version}\n"
 
 
 @pytest.mark.parametrize("args", [[], ["--json"]], ids=["bare", "json-only"])
-def test_bare_invocation_shows_help_and_exits_2(args: list[str]) -> None:
+def test_bare_invocation_shows_help_and_exits_2(runner: CliRunner, args: list[str]) -> None:
     result = runner.invoke(app, args)
     assert result.exit_code == 2
     assert "Usage:" in result.stdout
@@ -71,7 +70,13 @@ def test_bare_invocation_shows_help_and_exits_2(args: list[str]) -> None:
     assert _commands_listed(result.stdout) == ["version"]
 
 
-def test_help_lists_only_implemented_options_and_commands() -> None:
+def test_bare_invocation_output_equals_help(runner: CliRunner) -> None:
+    bare = runner.invoke(app, [])
+    help_ = runner.invoke(app, ["--help"])
+    assert bare.stdout == help_.stdout
+
+
+def test_help_lists_only_implemented_options_and_commands(runner: CliRunner) -> None:
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
     out = result.stdout
@@ -83,7 +88,7 @@ def test_help_lists_only_implemented_options_and_commands() -> None:
     assert _commands_listed(out) == ["version"]
 
 
-def test_unknown_option_is_usage_error_on_stderr() -> None:
+def test_unknown_option_is_usage_error_on_stderr(runner: CliRunner) -> None:
     result = runner.invoke(app, ["--bogus"])
     assert result.exit_code != 0
     assert result.stdout == ""

@@ -34,22 +34,32 @@ Roadmap phase 1. The repository holds only the constitution and a `uv init` scaf
 - [x] JSON output helper in `cli.py`: writes one object as a single line of plain `json.dumps` output to stdout. Used by every command that honors `--json`.
 - [x] `--json` accepted globally on the app callback and on the `version` command, with the same effect either way; later commands reuse the same mechanism.
 - [x] `rkc version` prints `rkc <version>`; `rkc version --json` and `rkc --json version` print `{"version": "<version>"}`. Exit 0.
-- [x] Bare `rkc` (and `rkc --json` with no command) prints the help text to stdout and exits 2. Method: `typer.Typer(add_completion=False, invoke_without_command=True)`, and the app callback, when `ctx.invoked_subcommand is None`, echoes `ctx.get_help()` and raises `typer.Exit(2)`. Do not use `no_args_is_help`, which misses `rkc --json`.
+- [x] Bare `rkc` (and `rkc --json` with no command) prints the help text to stdout and exits 2. Method: `typer.Typer(add_completion=False, invoke_without_command=True)`, and the app callback, when `ctx.invoked_subcommand is None`, echoes `ctx.get_help()` and raises `typer.Exit(2)` (with rich installed, `get_help()` prints the help itself and returns `""`, so the echo only adds the final newline; a test checks bare `rkc` stdout equals `rkc --help` stdout). Do not use `no_args_is_help`, which misses `rkc --json`.
 - [x] `--help` shows `--version`, `--json`, `--help` and the `version` command only; no completion options.
 - [x] Tests (written first), asserting on `result.stdout` and `result.stderr` separately: both `--json` positions parse with `json.loads` to `{"version": ...}` with empty stderr; plain `rkc version` is not JSON; bare invocation and `rkc --json` show help and exit 2; help lists exactly the `version` command and no completion options; `rkc --bogus` puts a usage error on stderr, nothing on stdout, non-zero exit.
 
 ## Group 3: Repository hygiene and docs
-- [x] `.gitignore`: keep the existing entries and add build artifacts (`build/`, `*.egg-info/`).
+- [x] `.gitignore`: keep the existing entries and add build artifacts (`build/`, `*.egg-info/`) and `.env.*` with `!.env.example`.
 - [x] `.env.example`: a header explaining that secrets live only in the environment or `.env`, that agent and cluster YAML refer to keys by variable name through `api_key_env`, and that the file must never hold real values; empty placeholders `OPENALEX_API_KEY=` and an example model key `OPENAI_API_KEY=`.
 - [x] `CLAUDE.md`: keep the existing Specs section; add the commands (`uv sync`, the four gates plus `mypy tests/`), the module map from `specs/tech-stack.md` (marking which modules exist), and the rules: everything fetched or model-written is untrusted data and never builds paths, URLs, SQL or commands; the store owns the facts; scan at every hop; secrets never in YAML, store, logs or output.
 - [x] `README.md`: keep the status honest (scaffolding, nothing functional yet); add user install (`uv tool install research-knowledge-curator`, noting it is not yet on PyPI) and the developer commands.
 - [x] Tests: none new (documentation and configuration only); the existing suite and gates still pass.
 
 ## Group 4: CI workflow
-- [x] `.github/workflows/ci.yml`: triggers on `push` and `pull_request`; `permissions: contents: read`; matrix Python 3.12 and 3.14; `actions/checkout` (with `persist-credentials: false`) and `astral-sh/setup-uv` (with `python-version: ${{ matrix.python-version }}`) pinned to full commit SHAs of their current releases, with the version tag in a trailing comment; a step that prints the Python version in use; `uv sync --locked`; then `ruff check .`, `ruff format --check .`, `mypy --strict src/`, `mypy tests/` and `pytest -q`, each through `uv run`.
+- [x] `.github/workflows/ci.yml`: triggers on `push` and `pull_request`; `permissions: contents: read`; matrix Python 3.12 and 3.14; `actions/checkout` (with `persist-credentials: false`) and `astral-sh/setup-uv` (with `python-version: ${{ matrix.python-version }}`) pinned to full commit SHAs of their current releases, with the version tag in a trailing comment; `uv sync --locked`; a step that prints the project interpreter's version (`uv run python --version`, after the sync); then `ruff check .`, `ruff format --check .`, `mypy --strict src/`, `mypy tests/` and `pytest -q`, each through `uv run`.
 - [x] Run `uvx --from actionlint-py actionlint .github/workflows/ci.yml` and `uvx zizmor --offline .github/workflows/ci.yml` locally (ad hoc, not added as dependencies) and fix anything they report.
 - [x] Run the test suite on Python 3.12 locally in an isolated environment, so the development `.venv` stays on 3.14.
 - [x] Tests: none new; actionlint, zizmor and the 3.12 run are the checks for this group.
+
+## Deep review fixes
+- [x] D1: autouse fixture in `tests/conftest.py` sets `typer.rich_utils.FORCE_TERMINAL = False`, so help assertions hold under `GITHUB_ACTIONS`, `FORCE_COLOR` or `PY_COLORS`.
+- [x] D2: CI "Show Python version" runs `uv run python --version` after `uv sync --locked`.
+- [x] D3: comment on `ctx.get_help()` in `cli.py`; test that bare `rkc` stdout equals `rkc --help` stdout.
+- [x] D4: `.gitignore` adds `.env.*` and `!.env.example`.
+- [x] D5: shared `runner`, `pyproject` and `expected_version` fixtures in `tests/conftest.py`.
+- [x] D6: test of the registered commands through `typer.main.get_command(app)`; the help-panel parser asserts with a message when the panel is missing.
+- [x] D7: one `version_line()` helper in `cli.py` for `--version` and `rkc version`.
+- [x] D8: the console-script test imports the `module:attr` target and asserts it is `cli.main`.
 
 ## Edge cases
 - `rkc --version --json` → plain `rkc <version>` (eager `--version` ignores `--json`; JSON version info is `rkc version --json`).

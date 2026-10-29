@@ -6,7 +6,7 @@ This project uses Spec-Driven Development. Read `specs/mission.md`, `specs/tech-
 - Lint: `uv run ruff check .`
 - Format check: `uv run ruff format --check .` (ruff also formats Python code blocks in Markdown such as this file and `README.md`; `specs/` is excluded)
 - Types: `uv run mypy --strict src/` and `uv run mypy tests/` (tests use default settings)
-- Tests: `uv run pytest -q` (offline: `pytest-socket` blocks the network)
+- Tests: `uv run pytest -q` (offline: `pytest-socket` blocks the network; shared fixtures, including one that keeps Typer help free of ANSI codes under `GITHUB_ACTIONS`/`FORCE_COLOR`, are in `tests/conftest.py`)
 
 All five must pass before a change is done.
 
