@@ -21,10 +21,11 @@ Roadmap phase 1. The repository holds only the constitution and a `uv init` scaf
 
 ## Group 1: Package and `--version`
 - [x] `pyproject.toml`: `requires-python = ">=3.12"`, description set to the tagline, author as name only (no email), `license = "MIT"` with `license-files = ["LICENSE"]`, `typer` pinned to its current release, console scripts `rkc` and `research-knowledge-curator` both pointing to the CLI entry point in `research_knowledge_curator.cli`, and a `dev` dependency group with `pytest`, `pytest-socket`, `ruff` and `mypy` pinned to their current releases.
-- [x] Tool configuration in `pyproject.toml`: ruff (target `py312`, line length 100, the rule set in T4), pytest (`testpaths = ["tests"]`, `--strict-markers`, `--disable-socket`), mypy settings that do not force strict on tests (strictness for `src/` comes from the `--strict` flag).
+- [x] Tool configuration in `pyproject.toml`: ruff (target `py312`, line length 100, the rule set in T4, `specs/` excluded because ruff formats code blocks in Markdown), pytest (`testpaths = ["tests"]`, `--strict-markers`, `--disable-socket`), mypy settings that do not force strict on tests (strictness for `src/` comes from the `--strict` flag).
 - [x] Bump the build backend to the current `uv_build` release range (`uv_build>=0.13.6,<0.14` at spec time; re-check at implementation).
 - [x] `LICENSE` (MIT, 2026, Vojtěch Kubín).
 - [x] Remove the hello-world `main` from `__init__.py`.
+- [x] Empty `py.typed` marker in the package (PEP 561), so `mypy tests/` type-checks imports of it.
 - [x] `cli.py`: Typer app with an eager `--version` option (`typer.Option(is_eager=True)` with a callback; Typer 0.26+ vendors Click, so `click` is not importable) that prints `rkc <version>` and exits 0. Shell completion options disabled.
 - [x] `uv lock` and commit `uv.lock`.
 - [x] Tests (written first, `tests/test_cli_smoke.py`): `--version` stdout and exit code; the printed version equals `[project] version` read from `pyproject.toml` with `tomllib`; both console scripts in `pyproject.toml` resolve to the same target; a test that opening a socket fails (proves `pytest-socket` is active).
