@@ -31,12 +31,12 @@ Roadmap phase 1. The repository holds only the constitution and a `uv init` scaf
 - [x] Tests (written first, `tests/test_cli_smoke.py`): `--version` stdout and exit code; the printed version equals `[project] version` read from `pyproject.toml` with `tomllib`; both console scripts in `pyproject.toml` resolve to the same target; a test that opening a socket fails (proves `pytest-socket` is active).
 
 ## Group 2: `version` subcommand, global `--json`, help and bare invocation
-- [ ] JSON output helper in `cli.py`: writes one object as a single line of plain `json.dumps` output to stdout. Used by every command that honors `--json`.
-- [ ] `--json` accepted globally on the app callback and on the `version` command, with the same effect either way; later commands reuse the same mechanism.
-- [ ] `rkc version` prints `rkc <version>`; `rkc version --json` and `rkc --json version` print `{"version": "<version>"}`. Exit 0.
-- [ ] Bare `rkc` (and `rkc --json` with no command) prints the help text to stdout and exits 2. Method: `typer.Typer(add_completion=False, invoke_without_command=True)`, and the app callback, when `ctx.invoked_subcommand is None`, echoes `ctx.get_help()` and raises `typer.Exit(2)`. Do not use `no_args_is_help`, which misses `rkc --json`.
-- [ ] `--help` shows `--version`, `--json`, `--help` and the `version` command only; no completion options.
-- [ ] Tests (written first), asserting on `result.stdout` and `result.stderr` separately: both `--json` positions parse with `json.loads` to `{"version": ...}` with empty stderr; plain `rkc version` is not JSON; bare invocation and `rkc --json` show help and exit 2; help lists exactly the `version` command and no completion options; `rkc --bogus` puts a usage error on stderr, nothing on stdout, non-zero exit.
+- [x] JSON output helper in `cli.py`: writes one object as a single line of plain `json.dumps` output to stdout. Used by every command that honors `--json`.
+- [x] `--json` accepted globally on the app callback and on the `version` command, with the same effect either way; later commands reuse the same mechanism.
+- [x] `rkc version` prints `rkc <version>`; `rkc version --json` and `rkc --json version` print `{"version": "<version>"}`. Exit 0.
+- [x] Bare `rkc` (and `rkc --json` with no command) prints the help text to stdout and exits 2. Method: `typer.Typer(add_completion=False, invoke_without_command=True)`, and the app callback, when `ctx.invoked_subcommand is None`, echoes `ctx.get_help()` and raises `typer.Exit(2)`. Do not use `no_args_is_help`, which misses `rkc --json`.
+- [x] `--help` shows `--version`, `--json`, `--help` and the `version` command only; no completion options.
+- [x] Tests (written first), asserting on `result.stdout` and `result.stderr` separately: both `--json` positions parse with `json.loads` to `{"version": ...}` with empty stderr; plain `rkc version` is not JSON; bare invocation and `rkc --json` show help and exit 2; help lists exactly the `version` command and no completion options; `rkc --bogus` puts a usage error on stderr, nothing on stdout, non-zero exit.
 
 ## Group 3: Repository hygiene and docs
 - [ ] `.gitignore`: keep the existing entries and add build artifacts (`build/`, `*.egg-info/`).
