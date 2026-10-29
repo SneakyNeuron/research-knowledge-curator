@@ -6,7 +6,7 @@
 - R3: `rkc --help` lists only implemented commands and options: in this phase the `version` command and the options `--version`, `--json` and `--help`, with no shell-completion options.
 - R4: Bare `rkc` (with or without `--json`) is a usage error: it prints the help text to stdout and exits 2, following Click 8.2+ and `uv`.
 - R5: `research-knowledge-curator` is an equivalent command: both console scripts point to the same entry point.
-- R6: The repository has an MIT `LICENSE`, a `.gitignore` covering `.rkc/`, `.env`, virtual environments, caches and build artifacts, and an `.env.example` with placeholder variable names only.
+- R6: The repository has an MIT `LICENSE`, a `.gitignore` covering `.rkc/`, `.env` and `.env.*` (except `.env.example`), virtual environments, caches and build artifacts, and an `.env.example` with placeholder variable names only.
 - R7: `CLAUDE.md` gives a coding agent the commands, the module map, and the untrusted-data, store-owns-the-facts, scan-every-hop and secrets rules, while keeping the existing Specs section.
 - R8: `README.md` states the honest status, the user install command and the developer commands.
 
@@ -17,8 +17,8 @@
 - T4: Ruff: `target-version = "py312"`, `line-length = 100`, `select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "S", "PTH"]`, with `S101` ignored under `tests/` and `specs/` excluded (`extend-exclude`). Format is checked with `ruff format --check`.
 - T5: `uv run mypy --strict src/` and `uv run mypy tests/` (default settings) both pass. Strictness is not configured globally in a way that applies `--strict` to tests.
 - T6: Package metadata: description is the tagline "Agent-maintained, evidence-anchored research knowledge base"; authors list the name "Vojtěch Kubín" only, with no email; `license = "MIT"` (SPDX expression) with `license-files = ["LICENSE"]`.
-- T7: Tests are offline and need no keys or Docker. `pytest-socket` with `--disable-socket` in the pytest configuration makes any network access fail the suite, locally and in CI. Tests use Typer's `CliRunner` plus `tomllib`.
-- T8: CI (`.github/workflows/ci.yml`) runs on every push and pull request, on Python 3.12 and 3.14, passing the matrix version through `astral-sh/setup-uv`'s `python-version` input, with `permissions: contents: read`, every action pinned to a full commit SHA (version tag in a comment), `persist-credentials: false` on checkout, `uv sync --locked`, and the same five commands as local: `ruff check .`, `ruff format --check .`, `mypy --strict src/`, `mypy tests/`, `pytest -q`.
+- T7: Tests are offline and need no keys or Docker. `pytest-socket` with `--disable-socket` in the pytest configuration makes any network access fail the suite, locally and in CI. Tests use Typer's `CliRunner` plus `tomllib`, with the shared `runner`, `pyproject` and `expected_version` fixtures in `tests/conftest.py`. An autouse fixture there sets `typer.rich_utils.FORCE_TERMINAL` to `False`, so help text has no ANSI codes when `GITHUB_ACTIONS`, `FORCE_COLOR` or `PY_COLORS` is set.
+- T8: CI (`.github/workflows/ci.yml`) runs on every push and pull request, on Python 3.12 and 3.14, passing the matrix version through `astral-sh/setup-uv`'s `python-version` input, with `permissions: contents: read`, every action pinned to a full commit SHA (version tag in a comment), `persist-credentials: false` on checkout, `uv sync --locked`, then `uv run python --version` (the project interpreter the gates use), and the same five commands as local: `ruff check .`, `ruff format --check .`, `mypy --strict src/`, `mypy tests/`, `pytest -q`.
 - T9: Data goes to stdout and messages to stderr. The JSON helper writes one plain `json.dumps` object per invocation to stdout (no rich console, colour or wrapping); help, usage errors and diagnostics never enter stdout's JSON stream.
 - T10: `.env.example` contains no values, only empty `NAME=` lines and comments.
 
@@ -55,3 +55,6 @@
 | CI proof before push | actionlint, zizmor and a local Python 3.12 test run, then CI green after the owner pushes | No push from the agent; still proves 3.12 support and workflow syntax and security | spec interview; zizmor added in spec review |
 | Ruff and `specs/` | `extend-exclude = ["specs/"]` | Ruff 0.17 formats Python blocks in Markdown; specs are prose with code sketches, and the archived design must stay unchanged | implementation (group 1) |
 | `py.typed` marker | Ship an empty `src/research_knowledge_curator/py.typed` | PEP 561; without it `mypy tests/` reports `import-untyped` for the package | implementation (group 1) |
+| Plain help in tests | Autouse fixture patching `typer.rich_utils.FORCE_TERMINAL = False` in `tests/conftest.py` | Typer forces a terminal (ANSI codes) when `GITHUB_ACTIONS`, `FORCE_COLOR` or `PY_COLORS` is set, which broke the help-text assertions in CI; `CliRunner(env=...)` cannot undo an import-time global | deep review (D1) |
+| CI Python version step | After `uv sync --locked`, as `uv run python --version` | Shows the project `.venv` interpreter the gates run on, which M1 checks | deep review (D2) |
+| `.env` variants | `.gitignore` ignores `.env` and `.env.*`, re-including `.env.example` | `.env.local`, `.env.production` and similar may hold secrets | deep review (D4) |

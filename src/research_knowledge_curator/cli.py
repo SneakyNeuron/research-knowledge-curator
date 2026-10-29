@@ -30,6 +30,11 @@ def package_version() -> str:
     return _dist_version(DIST_NAME)
 
 
+def version_line() -> str:
+    """Return the plain version line, ``rkc <version>``."""
+    return f"{PROG_NAME} {package_version()}"
+
+
 def emit_json(obj: dict[str, Any]) -> None:
     """Write one object to stdout as a single line of plain ``json.dumps`` output."""
     typer.echo(json.dumps(obj))
@@ -43,7 +48,7 @@ def json_requested(ctx: typer.Context, local: bool) -> bool:
 
 def _version_callback(value: bool) -> None:
     if value:
-        typer.echo(f"{PROG_NAME} {package_version()}")
+        typer.echo(version_line())
         raise typer.Exit(0)
 
 
@@ -64,6 +69,9 @@ def root(
     """Agent-maintained, evidence-anchored research knowledge base."""
     ctx.obj = CliState(json=json_output)
     if ctx.invoked_subcommand is None:
+        # With rich installed, Typer prints the help itself inside get_help() and returns "",
+        # so this echo only adds a final newline, keeping the output byte-identical to
+        # `rkc --help` (tests/test_cli_version.py checks this).
         typer.echo(ctx.get_help())
         raise typer.Exit(2)
 
@@ -74,7 +82,7 @@ def version_command(ctx: typer.Context, json_output: JsonOption = False) -> None
     if json_requested(ctx, json_output):
         emit_json({"version": package_version()})
     else:
-        typer.echo(f"{PROG_NAME} {package_version()}")
+        typer.echo(version_line())
 
 
 def main() -> None:
