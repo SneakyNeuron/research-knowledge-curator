@@ -39,11 +39,11 @@ Roadmap phase 1. The repository holds only the constitution and a `uv init` scaf
 - [x] Tests (written first), asserting on `result.stdout` and `result.stderr` separately: both `--json` positions parse with `json.loads` to `{"version": ...}` with empty stderr; plain `rkc version` is not JSON; bare invocation and `rkc --json` show help and exit 2; help lists exactly the `version` command and no completion options; `rkc --bogus` puts a usage error on stderr, nothing on stdout, non-zero exit.
 
 ## Group 3: Repository hygiene and docs
-- [ ] `.gitignore`: keep the existing entries and add build artifacts (`build/`, `*.egg-info/`).
-- [ ] `.env.example`: a header explaining that secrets live only in the environment or `.env`, that agent and cluster YAML refer to keys by variable name through `api_key_env`, and that the file must never hold real values; empty placeholders `OPENALEX_API_KEY=` and an example model key `OPENAI_API_KEY=`.
-- [ ] `CLAUDE.md`: keep the existing Specs section; add the commands (`uv sync`, the four gates plus `mypy tests/`), the module map from `specs/tech-stack.md` (marking which modules exist), and the rules: everything fetched or model-written is untrusted data and never builds paths, URLs, SQL or commands; the store owns the facts; scan at every hop; secrets never in YAML, store, logs or output.
-- [ ] `README.md`: keep the status honest (scaffolding, nothing functional yet); add user install (`uv tool install research-knowledge-curator`, noting it is not yet on PyPI) and the developer commands.
-- [ ] Tests: none new (documentation and configuration only); the existing suite and gates still pass.
+- [x] `.gitignore`: keep the existing entries and add build artifacts (`build/`, `*.egg-info/`).
+- [x] `.env.example`: a header explaining that secrets live only in the environment or `.env`, that agent and cluster YAML refer to keys by variable name through `api_key_env`, and that the file must never hold real values; empty placeholders `OPENALEX_API_KEY=` and an example model key `OPENAI_API_KEY=`.
+- [x] `CLAUDE.md`: keep the existing Specs section; add the commands (`uv sync`, the four gates plus `mypy tests/`), the module map from `specs/tech-stack.md` (marking which modules exist), and the rules: everything fetched or model-written is untrusted data and never builds paths, URLs, SQL or commands; the store owns the facts; scan at every hop; secrets never in YAML, store, logs or output.
+- [x] `README.md`: keep the status honest (scaffolding, nothing functional yet); add user install (`uv tool install research-knowledge-curator`, noting it is not yet on PyPI) and the developer commands.
+- [x] Tests: none new (documentation and configuration only); the existing suite and gates still pass.
 
 ## Group 4: CI workflow
 - [ ] `.github/workflows/ci.yml`: triggers on `push` and `pull_request`; `permissions: contents: read`; matrix Python 3.12 and 3.14; `actions/checkout` (with `persist-credentials: false`) and `astral-sh/setup-uv` (with `python-version: ${{ matrix.python-version }}`) pinned to full commit SHAs of their current releases, with the version tag in a trailing comment; a step that prints the Python version in use; `uv sync --locked`; then `ruff check .`, `ruff format --check .`, `mypy --strict src/`, `mypy tests/` and `pytest -q`, each through `uv run`.
