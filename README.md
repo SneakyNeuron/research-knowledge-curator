@@ -2,8 +2,4 @@
 
 Agent-maintained, evidence-anchored research knowledge base. Working names: package `research-knowledge-curator`, CLI `rkc`.
 
-Status: planning. The implementation plan is in `plans/2026-10-28_research-knowledge-curator.md`. The owner's topics and draft example questions are in `docs/topics.md`.
-
-To start implementing, run the implementation skill from this directory in an environment that has the review and implementation agents:
-
-    /implement-plan plans/2026-10-28_research-knowledge-curator.md
+Status: planning. The project follows Spec-Driven Development: the constitution is in `specs/mission.md`, `specs/tech-stack.md` and `specs/roadmap.md`, and feature specs go in `specs/features/`. The earlier design (v3.1) is archived in `specs/backlog/2026-10-28-design-v3.1.md` as input for feature specs. The owner's topics and draft example questions are in `docs/topics.md`.
