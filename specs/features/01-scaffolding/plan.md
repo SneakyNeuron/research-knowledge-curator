@@ -46,10 +46,10 @@ Roadmap phase 1. The repository holds only the constitution and a `uv init` scaf
 - [x] Tests: none new (documentation and configuration only); the existing suite and gates still pass.
 
 ## Group 4: CI workflow
-- [ ] `.github/workflows/ci.yml`: triggers on `push` and `pull_request`; `permissions: contents: read`; matrix Python 3.12 and 3.14; `actions/checkout` (with `persist-credentials: false`) and `astral-sh/setup-uv` (with `python-version: ${{ matrix.python-version }}`) pinned to full commit SHAs of their current releases, with the version tag in a trailing comment; a step that prints the Python version in use; `uv sync --locked`; then `ruff check .`, `ruff format --check .`, `mypy --strict src/`, `mypy tests/` and `pytest -q`, each through `uv run`.
-- [ ] Run `uvx --from actionlint-py actionlint .github/workflows/ci.yml` and `uvx zizmor --offline .github/workflows/ci.yml` locally (ad hoc, not added as dependencies) and fix anything they report.
-- [ ] Run the test suite on Python 3.12 locally in an isolated environment, so the development `.venv` stays on 3.14.
-- [ ] Tests: none new; actionlint, zizmor and the 3.12 run are the checks for this group.
+- [x] `.github/workflows/ci.yml`: triggers on `push` and `pull_request`; `permissions: contents: read`; matrix Python 3.12 and 3.14; `actions/checkout` (with `persist-credentials: false`) and `astral-sh/setup-uv` (with `python-version: ${{ matrix.python-version }}`) pinned to full commit SHAs of their current releases, with the version tag in a trailing comment; a step that prints the Python version in use; `uv sync --locked`; then `ruff check .`, `ruff format --check .`, `mypy --strict src/`, `mypy tests/` and `pytest -q`, each through `uv run`.
+- [x] Run `uvx --from actionlint-py actionlint .github/workflows/ci.yml` and `uvx zizmor --offline .github/workflows/ci.yml` locally (ad hoc, not added as dependencies) and fix anything they report.
+- [x] Run the test suite on Python 3.12 locally in an isolated environment, so the development `.venv` stays on 3.14.
+- [x] Tests: none new; actionlint, zizmor and the 3.12 run are the checks for this group.
 
 ## Edge cases
 - `rkc --version --json` → plain `rkc <version>` (eager `--version` ignores `--json`; JSON version info is `rkc version --json`).
