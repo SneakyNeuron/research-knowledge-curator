@@ -1,5 +1,7 @@
 .rkc/
 .env
+.env.*
+!.env.example
 .venv/
 __pycache__/
 *.pyc
@@ -7,3 +9,5 @@ __pycache__/
 .ruff_cache/
 .pytest_cache/
 dist/
+build/
+*.egg-info/
