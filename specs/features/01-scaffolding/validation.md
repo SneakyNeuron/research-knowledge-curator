@@ -18,13 +18,13 @@
 - [x] V15 (T7): `GITHUB_ACTIONS=true uv run pytest -q`, `FORCE_COLOR=1 uv run pytest -q` and `PY_COLORS=1 uv run pytest -q` pass (help assertions hold when Typer forces a terminal).
 
 ## Manual (human in the loop)
-- [ ] M1 (T8): after pushing `feature/01-scaffolding` to `origin`, the CI workflow is green for both Python 3.12 and 3.14 on GitHub, and each job's log shows it ran on its matrix Python version (not the `.python-version` 3.14).
-- [ ] M2 (T8): read `.github/workflows/ci.yml` and confirm it triggers on `push` and `pull_request`, the matrix is Python 3.12 and 3.14 passed to setup-uv's `python-version`, every `uses:` line is a 40-character SHA with a version comment, checkout has `persist-credentials: false`, `permissions` is `contents: read`, and the steps are `uv sync --locked`, `uv run python --version`, then `uv run` of `ruff check .`, `ruff format --check .`, `mypy --strict src/`, `mypy tests/` and `pytest -q`.
-- [ ] M3 (R6, T6, T10): read `LICENSE`, `.gitignore`, `.env.example` and the `[project]` table: MIT text with 2026 and your name, no email in authors, the tagline as description, `license = "MIT"` with `license-files = ["LICENSE"]`, `.gitignore` covering `.rkc/`, `.env` and `.env.*` (with `.env.example` still tracked), virtual environments, caches and build artifacts, `.env.example` with empty placeholders only.
-- [ ] M4 (R7, R8): read `CLAUDE.md` and `README.md`: the Specs section is intact, the commands match `specs/tech-stack.md`, the module map and the four rules are present, and the README does not claim functionality that does not exist.
+- [x] M1 (T8): after pushing `feature/01-scaffolding` to `origin`, the CI workflow is green for both Python 3.12 and 3.14 on GitHub, and each job's log shows it ran on its matrix Python version (not the `.python-version` 3.14).
+- [x] M2 (T8): read `.github/workflows/ci.yml` and confirm it triggers on `push` and `pull_request`, the matrix is Python 3.12 and 3.14 passed to setup-uv's `python-version`, every `uses:` line is a 40-character SHA with a version comment, checkout has `persist-credentials: false`, `permissions` is `contents: read`, and the steps are `uv sync --locked`, `uv run python --version`, then `uv run` of `ruff check .`, `ruff format --check .`, `mypy --strict src/`, `mypy tests/` and `pytest -q`.
+- [x] M3 (R6, T6, T10): read `LICENSE`, `.gitignore`, `.env.example` and the `[project]` table: MIT text with 2026 and your name, no email in authors, the tagline as description, `license = "MIT"` with `license-files = ["LICENSE"]`, `.gitignore` covering `.rkc/`, `.env` and `.env.*` (with `.env.example` still tracked), virtual environments, caches and build artifacts, `.env.example` with empty placeholders only.
+- [x] M4 (R7, R8): read `CLAUDE.md` and `README.md`: the Specs section is intact, the commands match `specs/tech-stack.md`, the module map and the four rules are present, and the README does not claim functionality that does not exist.
 
 ## Understanding (cognitive debt)
-- [ ] U1: read `cli.py` and the `--json` tests, and be able to explain why `--version` is plain text (Click processes eager options before others) while `rkc version` honors `--json` in either position, and where later commands will read the `--json` flag from.
+- [x] U1: read `cli.py` and the `--json` tests, and be able to explain why `--version` is plain text (Click processes eager options before others) while `rkc version` honors `--json` in either position, and where later commands will read the `--json` flag from.
 
 ## Definition of done
 All boxes above are ticked, the deep review findings are resolved or consciously accepted, specs match the code, and the roadmap phase is marked complete.
