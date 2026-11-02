@@ -1,7 +1,7 @@
 [project]
 name = "research-knowledge-curator"
 version = "0.1.0"
-description = "Agent-maintained, evidence-anchored research knowledge base"
+description = "Agent-maintained, injection-defended research knowledge base"
 readme = "README.md"
 authors = [
     { name = "Vojtěch Kubín" }

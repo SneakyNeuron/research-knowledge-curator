@@ -6,7 +6,7 @@ Sources in v1 are arXiv (no key) and OpenAlex (only if the owner supplies a key)
 
 ## First real topic for the manual end-to-end test: 2. Financial markets model evaluation
 
-Chosen because it fits scholarly sources well (arXiv categories such as q-fin.ST, q-fin.CP and stat.ML), has clear vocabulary, and is likely to contain real disagreements (which exercises conflict handling).
+Chosen because it fits scholarly sources well (arXiv categories such as q-fin.ST, q-fin.CP and stat.ML), has clear vocabulary, and is likely to contain real disagreements, which retrieval over the original text should surface (explicit conflict links are later work).
 
 ## 1. AI engineering  (cluster: `ai-engineering`)
 Everything about AI engineering, that is, deploying agents into processes.
