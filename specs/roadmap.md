@@ -2,7 +2,7 @@
 
 Each phase is one feature: planned with `/sdd:feature`, built with `/sdd:implement` and closed with `/sdd:validate`. Phases name the sections of the archived design (`specs/backlog/2026-10-28-design-v3.1.md`) worth reading when their feature spec is written. That design predates the 2026-11-02 pivot from claim curation to original-text indexing, so the constitution wins wherever the two differ.
 
-The MVP (phases 1–12) is a secured system that pulls papers, checks them for attacks and relevance, indexes the original text in LeanRAG, and lets agents query it. LeanRAG is now the backbone, so its spike comes first: what it accepts and returns shapes the store and the engine wrapper. The classifier evaluation (phase 5's manual task) needs the owner and network access too, and can start alongside phases 2–4.
+The MVP (phases 1–13) is a secured system that pulls papers, checks them for attacks and relevance, indexes the original text in LeanRAG, and lets agents query it. LeanRAG is the backbone and is vendored into `rkc` (decided in the 2026-11-02 vendoring replan), so its baseline spike comes first: it records the reference behaviour the port must reproduce, and what upstream accepts and returns shapes the store. The classifier evaluation (phase 5's manual task) needs the owner and network access too, and can start alongside phases 2–4.
 
 ## Phase 1: Scaffolding ✅
 Spec: specs/features/01-scaffolding/
@@ -13,15 +13,16 @@ Goal: a packaged, installable `rkc` with the full quality toolchain and CI in pl
 - [x] GitHub Actions workflow on Python 3.12 and 3.14
 Design reference: "Implementation steps > Step 1", "Naming", "Files to create".
 
-## Phase 2: LeanRAG spike (manual, owner)
-Goal: a measured go or no-go on LeanRAG as published, used on original full text.
-- [ ] Run LeanRAG at a pinned commit on about 50–100 real full-text papers from `fin-model-evaluation`, and record in `docs/spikes/leanrag.md`: input format and chunking, whether a result can be traced back to the original passage (source ID and offsets), where notes could attach at the lowest level, incremental add and removal versus full rebuild, build cost and time per paper, stability, whether injected text survives its summarizer, and retrieval quality on the cluster's example questions
-- [ ] Record the decision and any justified patches. If it fails the go criteria, agree a different existing engine before phase 8
-Design reference: "Step 9", "LeanRAG engine".
+## Phase 2: LeanRAG baseline spike (manual, owner)
+Goal: a recorded baseline of upstream LeanRAG on real full text, which the vendored port (phase 8) must reproduce.
+- [ ] A throwaway harness in `scripts/spikes/leanrag/`: clone upstream at a pinned commit into a gitignored directory, its own Python venv created by `uv`, and a temporary MySQL container bound to localhost for the harness only (`rkc` itself never needs services). Scripts fetch about 50–100 full-text papers for `fin-model-evaluation`, extract the text, export it in upstream's chunk format with source IDs and offsets, run its build and queries, and log the measurements
+- [ ] Record in `docs/spikes/leanrag.md`: the upstream commit to vendor, input format and chunking, embedding dimension, whether a result can be traced back to the original passage (source ID and offsets), build cost and time per paper (model calls and tokens), stability across two builds, whether injected text survives its summarizer, and its answers and retrieved passages on the cluster's example questions (the reference set the port is compared against)
+- [ ] Record the go decision. If upstream's retrieval quality or traceability is not good enough to be worth porting, agree a different engine with the owner before phase 8
+Design reference: "Step 9", "LeanRAG engine" (Docker for `rkc`, unmodified use, `engine install` and the sandboxed build do not apply).
 
 ## Phase 3: Configuration and cluster init
 Goal: clusters and research agents can be created, validated, approved and paused.
-- [ ] Pydantic models for `cluster.yaml` and agent YAML (context, sources, triage model, caps), with errors that name the file and field
+- [ ] Pydantic models for `cluster.yaml` (including engine settings: extraction, summary and embedding models, index parameters) and agent YAML (context, sources, triage model, caps), with errors that name the file and field
 - [ ] Secrets from the environment or `.env`, redaction, and the approval hash over context, sources and specs
 - [ ] `rkc init`, `rkc agent add | validate | approve | list`, `rkc pause | resume`
 - [ ] ID validation. `approve` needs an interactive terminal
@@ -46,9 +47,9 @@ Design reference: "Step 5", "Injection defense".
 
 ## Phase 6: Model layer, relevance triage and `doctor`
 Goal: any configured model can be called safely, papers get a relevance decision, and the environment can be diagnosed.
-- [ ] Role-based chat models, structured calls with one retry, usage counting and scripted fakes
+- [ ] Role-based chat and embedding models (triage, and the engine's extraction, summary and embedding roles), structured calls with one retry, usage counting, scripted fakes and deterministic fake embeddings
 - [ ] Provenance prompt template with an untrusted block, and the triage call (relevant or not, capped reason)
-- [ ] `rkc doctor` (Python, FTS5, cluster, scanner, classifier, Docker, model connectivity, keys by name only)
+- [ ] `rkc doctor` (Python, FTS5, cluster, scanner, classifier, model connectivity per role, keys by name only; the engine store and vector index checks are added in phase 8)
 Design reference: "Step 6", "Models", and triage in "Curation workflow".
 
 ## Phase 7: Sources
@@ -59,36 +60,44 @@ Goal: papers from arXiv, OpenAlex and local files arrive as guarded, deduplicate
 - [ ] `rkc add-file --as literature|experiment|note`
 Design reference: "Step 7", "Sources".
 
-## Phase 8: LeanRAG engine and queries
-Goal: `rkc query` returns sanitized, untrusted-marked results through LeanRAG, each labelled as verbatim source text or engine-generated, falling back to keyword search.
-- [ ] Engine protocol, `Hit` with the verbatim or generated label and source locators, hydration from the store with the output guard, and a reusable contract test
-- [ ] LeanRAG wrapper, Docker compose file, sandboxed build, sync (including removal of retracted sources) and rebuild thresholds
-- [ ] `rkc query`, `rkc engine install | sync | status`
-Design reference: "Step 10", "Engines", "Retrieval", "LeanRAG engine".
+## Phase 8: Vendored LeanRAG engine and queries
+Goal: `rkc query` returns sanitized, untrusted-marked results through the vendored LeanRAG, each labelled as verbatim source text or engine-generated, falling back to keyword search.
+- [ ] Vendor upstream at the commit phase 2 recorded into the `engine_leanrag` subpackage, with its MIT notice and `UPSTREAM.md` (commit and every change). Port to our gates (`ruff`, `mypy --strict`), pin its numeric dependencies, model calls through `llm` (extraction, summary and embedding roles), SQLite `graph.sqlite`, and the embedded vector index chosen and recorded here (Milvus Lite 3.x, `sqlite-vec` or brute force)
+- [ ] Enforcement in code for the in-process engine: no tools, provenance-marked untrusted block, structured and capped output, parameterized SQL, keys only from hashes and namespaced IDs
+- [ ] Engine protocol, `Hit` with the verbatim or generated label and source locators, hydration from the store with the output guard, and a reusable contract test with a scripted fake model and deterministic fake embeddings
+- [ ] Full build from the store and cache, `rkc query`, and parity with the phase 2 baseline on the example questions. Remove `scripts/spikes/leanrag/` once the port matches
+- [ ] CI runs the engine tests on Linux, macOS and Windows
+Design reference: "Step 10", "Engines", "Retrieval", "LeanRAG engine" (Docker, MySQL and Milvus services, unmodified use, `engine install` and the sandboxed build do not apply).
 
-## Phase 9: Run orchestration
+## Phase 9: Partial engine updates
+Goal: intake keeps the engine current without rebuilding the whole hierarchy, and a full rebuild happens only on request.
+- [ ] Partial update on sync: new sources are chunked, extracted and attached to the nearest existing clusters, retracted sources are removed, and only the ancestors of changed nodes are re-summarized
+- [ ] `rkc engine sync | rebuild | status`, with `status` reporting drift signals (such as updates since the last rebuild)
+- [ ] Measure drift: retrieval after a series of partial updates compared with a fresh full rebuild on the same sources, recorded in `docs/spikes/leanrag.md`
+
+## Phase 10: Run orchestration
 Goal: `rkc run` executes an agent end to end, idempotently, with clear exit codes.
 - [ ] Lock, approval check, watermarks, dedupe, input guard, triage, caps, `--dry-run`, engine sync, and the run summary
 - [ ] Exit codes for caps, locks, approval drift and scanner failure. Respect pause
 Design reference: "Step 11", "Caps and dry-run".
 
-## Phase 10: Scheduling
+## Phase 11: Scheduling
 Goal: agents run on cron without touching anything else in the crontab.
 - [ ] `rkc schedule install | remove | show`, with a fixed command template and validated IDs
 Design reference: "Step 12", "Scheduling".
 
-## Phase 11: Security smoke suite and report
+## Phase 12: Security smoke suite and report
 Goal: evidence that the defense contains injection, including payloads the guards miss.
 - [ ] Cases, network blocker, instrumented stubs, a deliberately vulnerable stub of the triage and query paths, a regression corpus, a best-of-N budget and a `live` mode
-- [ ] Cases for model-generated text presented as source text, and for URLs in fetched content trying to steer downloads
+- [ ] Cases for model-generated text presented as source text, for URLs in fetched content trying to steer downloads, for injection through the engine's extraction and summary prompts, and for entity or relation names (model output) trying to build SQL, paths or configuration in `graph.sqlite`
 - [ ] `scripts/security_smoke.py` writes the report (results per objective, failures with evidence, benign controls, what is not covered)
 Design reference: "Step 13", "Test scenarios", "Injection defense".
 
-## Phase 12: Skills, docs, end-to-end check and release
+## Phase 13: Skills, docs, end-to-end check and release
 Goal: a developer installs `rkc` from PyPI and a coding agent sets it up through skills.
 - [ ] `rkc-setup`, `rkc-query`, `rkc-ops`, `rkc-report`, and `rkc skills install --target`
-- [ ] `docs/limits.md` and a finished README (including Docker for LeanRAG)
-- [ ] Automated end-to-end test, a `uv build` wheel that installs with `uv tool install`, and the first PyPI release
+- [ ] `docs/limits.md` and a finished README (supported platforms, and credit for the vendored LeanRAG with a link to `engine_leanrag/UPSTREAM.md`)
+- [ ] Automated end-to-end test, a `uv build` wheel that installs with `uv tool install` and runs the engine on Linux, macOS and Windows, and the first PyPI release
 Design reference: "Step 14", "Verification".
 
 ## Later / unscheduled

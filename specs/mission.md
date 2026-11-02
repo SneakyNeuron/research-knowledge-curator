@@ -1,7 +1,7 @@
 # Mission
 
 ## Vision
-Research Knowledge Curator (`rkc`) is an agent-maintained, injection-defended research knowledge base that any developer can add to a project. Research agents pull new papers on a schedule, keep only what is relevant to a context the user approved, check them for prompt-injection attacks, and index the original full text, unchanged, in a hierarchical retrieval engine (LeanRAG). The original text is the ground truth: its lowest level is the source text itself, and later layers add notes to it rather than rewriting it. Coding agents and people query it through a CLI. There is no GUI and no chat application.
+Research Knowledge Curator (`rkc`) is an agent-maintained, injection-defended research knowledge base that any developer can add to a project. Research agents pull new papers on a schedule, keep only what is relevant to a context the user approved, check them for prompt-injection attacks, and index the original full text, unchanged, in a hierarchical retrieval engine (LeanRAG, vendored and adapted so it installs with `rkc` and needs no services). The original text is the ground truth: its lowest level is the source text itself, and later layers add notes to it rather than rewriting it. Coding agents and people query it through a CLI. There is no GUI and no chat application.
 
 ## Audience
 - **Developers who work with coding agents** (Claude Code and similar) and want a living, citable literature base inside their project. They install `rkc` as an isolated tool, and their coding agent sets it up through the shipped `rkc-setup` skill: it analyzes the project, interviews the user, writes the research-agent configuration, and asks the user to approve it.
@@ -17,7 +17,7 @@ Keeping up with research on a fast-moving topic means reading feeds, judging rel
   - Relevance judgement against a user-approved context: one structured model call per paper, before anything is indexed.
   - The original text, unchanged, as the lowest level of the knowledge base, with a seam for notes attached to it later.
   - History of intake: what was added, when and why (the relevance reason), and retracting a bad run.
-  - CLI queries with machine-readable output, using hierarchical retrieval (LeanRAG) behind a replaceable engine interface. Every result says which text is verbatim source text (with its source ID and location) and which is model-generated.
+  - CLI queries with machine-readable output, using hierarchical retrieval (LeanRAG) behind a replaceable engine interface. The engine is kept current by partial updates that touch only the affected part of the hierarchy, and is fully rebuilt only on request. Every result says which text is verbatim source text (with its source ID and location) and which is model-generated.
   - Installation into any project as an isolated tool, with several research agents per cluster and any number of clusters.
   - Any model reachable by base URL, key and model name.
   - Prompt-injection defense: a mandatory input guard before anything is stored or indexed, an output guard on results (on by default), and enforcement controls in code that contain whatever gets past both, proven by tests.
@@ -31,7 +31,8 @@ Keeping up with research on a fast-moving topic means reading feeds, judging rel
   - Confidentiality of data sent to the model endpoints the user configures. The user chooses the endpoints, and `rkc` neither warns nor restricts.
   - Open-web fetching (including publisher URLs found in metadata), and sources other than arXiv, OpenAlex and local files (Crossref, Semantic Scholar, Wikipedia, Wikidata and Google Scholar are deferred).
   - Tamper-evidence (hash chains, signatures), a topic taxonomy inside a cluster, cross-cluster queries, currency budgets, and a human review gate on every change.
-  - Writing an in-house retrieval engine, or forking LeanRAG without a measured reason.
+  - Designing an in-house retrieval engine from scratch. LeanRAG is vendored (MIT, with attribution) and adapted: packaging, SQLite storage instead of MySQL, an embedded vector index, and partial updates. Any other change to its algorithm needs a measured reason.
+  - Infrastructure the user has to run, such as database servers or Docker. Model endpoints are the only services `rkc` talks to besides the sources.
   - Modifying the host project. `rkc` writes only inside its cluster directory, and writes skills only to a directory the user names.
 
 ## Success
@@ -43,7 +44,7 @@ Keeping up with research on a fast-moving topic means reading feeds, judging rel
 - The package is published on PyPI under the MIT license, with docs that state what the system does and does not establish.
 
 ## Tone & principles
-- **The best part is no part. Do not reinvent the wheel.** Every component must serve a requirement in Scope. Mature libraries and the published LeanRAG are used instead of building our own.
+- **The best part is no part. Do not reinvent the wheel.** Every component must serve a requirement in Scope. Mature libraries are used instead of building our own, and LeanRAG's published algorithm is vendored rather than reinvented.
 - **The original text is the ground truth.** It is stored and indexed unchanged. Anything a model writes (relevance reasons, engine summaries, later notes) sits on top of it, is marked as generated, and points back to the source text.
 - **The store owns the facts.** The engine only suggests which passages are relevant. Source identity, intake decisions, retractions, bans and history always come from the store.
 - **Nothing is deleted from the store.** Changes are new rows in changesets. The raw cache is never edited, and the only deletions are cache copies of content the input guard blocks.

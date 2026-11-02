@@ -11,20 +11,20 @@ This project uses Spec-Driven Development. Read `specs/mission.md`, `specs/tech-
 All five must pass before a change is done. `scripts/check.sh` runs them in order, plus `pytest` under `GITHUB_ACTIONS`, `FORCE_COLOR` and `PY_COLORS` (where Typer forces colour, as in CI), and stops at the first failure.
 
 ## Module map
-`src/research_knowledge_curator/`, one module per concern (from `specs/tech-stack.md`):
+`src/research_knowledge_curator/`, one module per concern (from `specs/tech-stack.md`; `engine_leanrag` is a subpackage):
 
 | Module | Concern | Exists |
 |---|---|---|
 | `cli` | Typer app, global `--json`, command entry points | yes |
 | `config` | Cluster and agent YAML, pydantic schemas | no |
-| `store` | SQLite intake store: sources, intake decisions, changesets, watermarks, bans, FTS5 fallback (append-only) | no |
+| `store` | SQLite intake store: sources, intake decisions, changesets, watermarks, bans, FTS5 fallback (append-only; engine data never goes here) | no |
 | `cache` | Hash-addressed raw cache | no |
 | `scan` | Input and output guards, sandboxed text extraction (PDF, local files) | no |
 | `llm` | Model access | no |
 | `sources` | arXiv, OpenAlex (full text from provider endpoints), local files | no |
 | `triage` | Relevance check against the approved context (one structured model call) | no |
 | `engines` | Retrieval engine interface | no |
-| `engine_leanrag` | LeanRAG engine | no |
+| `engine_leanrag` | Vendored, adapted LeanRAG: derived, disposable `engines/leanrag/graph.sqlite`, embedded vector index, partial updates; upstream commit and every change in `UPSTREAM.md` | no |
 | `run` | Intake runs and locking | no |
 | `schedule` | Crontab scheduling | no |
 
@@ -35,4 +35,5 @@ Commands read `--json` through the pattern in `cli.py`: declare a `json_output: 
 - The original text is the ground truth: it is cached and indexed unchanged, and model-written text (relevance reasons, engine summaries, later notes) is always labelled as generated.
 - The store owns the facts. Changeset IDs, source identity, intake decisions, bans and history come from the store, never from a model or a caller.
 - Scan at every hop: content is scanned before it is stored, indexed or read by the relevance model, and query output is sanitized and, with the output guard on (the default), scanned before it is returned. Input scanning fails closed.
+- Vendored LeanRAG code keeps its MIT notice and meets the same gates as our code; record every change to it in `engine_leanrag/UPSTREAM.md`. It runs in-process, so its model calls follow the rules above: no tools, untrusted text in a provenance-marked block, structured and capped output.
 - Secrets never appear in YAML, the store, logs or output. YAML names a key by variable through `api_key_env`; messages name a missing key by its variable, never its value.
