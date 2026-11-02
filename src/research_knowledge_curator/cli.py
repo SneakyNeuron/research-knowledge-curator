@@ -66,7 +66,7 @@ def root(
     ] = False,
     json_output: JsonOption = False,
 ) -> None:
-    """Agent-maintained, evidence-anchored research knowledge base."""
+    """Agent-maintained, injection-defended research knowledge base."""
     ctx.obj = CliState(json=json_output)
     if ctx.invoked_subcommand is None:
         # With rich installed, Typer prints the help itself inside get_help() and returns "",

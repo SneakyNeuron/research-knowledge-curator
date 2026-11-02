@@ -1,8 +1,8 @@
 # Research Knowledge Curator
 
-Agent-maintained, evidence-anchored research knowledge base. Working names: package `research-knowledge-curator`, CLI `rkc`.
+Agent-maintained, injection-defended research knowledge base. Working names: package `research-knowledge-curator`, CLI `rkc`.
 
-Status: scaffolding. Nothing functional yet: `rkc` only reports its version (`rkc --version`, `rkc version [--json]`). The project follows Spec-Driven Development: the constitution is in `specs/mission.md`, `specs/tech-stack.md` and `specs/roadmap.md`, and feature specs go in `specs/features/`. The earlier design (v3.1) is archived in `specs/backlog/2026-10-28-design-v3.1.md` as input for feature specs. The owner's topics and draft example questions are in `docs/topics.md`.
+Status: scaffolding. Nothing functional yet: `rkc` only reports its version (`rkc --version`, `rkc version [--json]`). The project follows Spec-Driven Development: the constitution is in `specs/mission.md`, `specs/tech-stack.md` and `specs/roadmap.md`, and feature specs go in `specs/features/`. The earlier design (v3.1) is archived in `specs/backlog/2026-10-28-design-v3.1.md` as input for feature specs; it predates the 2026-11-02 pivot from claim curation to original-text indexing, and the constitution wins where they differ. The owner's topics and draft example questions are in `docs/topics.md`.
 
 ## Install
 

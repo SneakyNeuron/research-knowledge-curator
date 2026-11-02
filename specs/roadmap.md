@@ -79,7 +79,8 @@ Design reference: "Step 12", "Scheduling".
 
 ## Phase 11: Security smoke suite and report
 Goal: evidence that the defense contains injection, including payloads the guards miss.
-- [ ] Cases, network blocker, instrumented stubs, a deliberately vulnerable stub, a regression corpus, a best-of-N budget and a `live` mode
+- [ ] Cases, network blocker, instrumented stubs, a deliberately vulnerable stub of the triage and query paths, a regression corpus, a best-of-N budget and a `live` mode
+- [ ] Cases for model-generated text presented as source text, and for URLs in fetched content trying to steer downloads
 - [ ] `scripts/security_smoke.py` writes the report (results per objective, failures with evidence, benign controls, what is not covered)
 Design reference: "Step 13", "Test scenarios", "Injection defense".
 

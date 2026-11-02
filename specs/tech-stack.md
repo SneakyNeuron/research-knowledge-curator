@@ -15,7 +15,7 @@ Exact versions are pinned in `pyproject.toml` and `uv.lock` when each dependency
 | Model access | `langchain-core`, `langchain-openai` (`langchain-anthropic` as an optional extra) | Any OpenAI-compatible endpoint by base URL, key and model, with structured output. In the MVP the only `rkc` model role is relevance triage (one structured call per paper); LeanRAG's own models are configured for the engine |
 | arXiv | `arxiv` | Metadata and PDF download; its client honors arXiv's one-request-per-three-seconds rule |
 | OpenAlex | `pyalex` | API key, retries, `select`, filters and cursor pagination. Full text only from OpenAlex's own content endpoint (metered, limited daily on a free key), never from publisher URLs in the metadata |
-| Text extraction (PDF and local files) | `llama-index-core`, `llama-index-readers-file` | One path for downloaded PDFs and local files: PDF, DOCX, PPTX, EPUB, HTML, Markdown, notebooks, CSV and text. Runs only inside a sandboxed subprocess with an allowlist of readers |
+| Text extraction (PDF and local files) | `llama-index-core`, `llama-index-readers-file` | Owned by `scan`, as the first layer of the input guard. One path for downloaded PDFs and local files: PDF, DOCX, PPTX, EPUB, HTML, Markdown, notebooks, CSV and text. Runs only inside a sandboxed subprocess with an allowlist of readers |
 | Scheduling | `python-crontab` | Finds, adds and removes jobs by comment (LGPL-3.0, used as a library) |
 | Locking | `filelock` | One run per cluster at a time |
 | Injection classifier | A local open-source model through `transformers`, chosen by a measured evaluation | Loaded from a pinned safetensors revision with remote code disabled. Until the evaluation is recorded, the input guard runs rules-only and `rkc doctor` warns |

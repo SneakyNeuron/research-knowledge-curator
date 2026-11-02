@@ -19,7 +19,7 @@ All five must pass before a change is done.
 | `config` | Cluster and agent YAML, pydantic schemas | no |
 | `store` | SQLite intake store: sources, intake decisions, changesets, watermarks, bans, FTS5 fallback (append-only) | no |
 | `cache` | Hash-addressed raw cache | no |
-| `scan` | Input and output guards | no |
+| `scan` | Input and output guards, sandboxed text extraction (PDF, local files) | no |
 | `llm` | Model access | no |
 | `sources` | arXiv, OpenAlex (full text from provider endpoints), local files | no |
 | `triage` | Relevance check against the approved context (one structured model call) | no |
@@ -34,5 +34,5 @@ Commands read `--json` through the pattern in `cli.py`: declare a `json_output: 
 - Everything fetched or model-written is untrusted data. It never builds file paths, URLs, SQL or shell commands; use hashes, provider-controlled namespaced IDs and parameterized queries instead.
 - The original text is the ground truth: it is cached and indexed unchanged, and model-written text (relevance reasons, engine summaries, later notes) is always labelled as generated.
 - The store owns the facts. Changeset IDs, source identity, intake decisions, bans and history come from the store, never from a model or a caller.
-- Scan at every hop: content is scanned before it is stored, and query output is sanitized and, with the output guard on (the default), scanned before it is returned. Input scanning fails closed.
+- Scan at every hop: content is scanned before it is stored, indexed or read by the relevance model, and query output is sanitized and, with the output guard on (the default), scanned before it is returned. Input scanning fails closed.
 - Secrets never appear in YAML, the store, logs or output. YAML names a key by variable through `api_key_env`; messages name a missing key by its variable, never its value.
