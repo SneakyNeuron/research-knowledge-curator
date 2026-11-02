@@ -17,21 +17,22 @@ All five must pass before a change is done.
 |---|---|---|
 | `cli` | Typer app, global `--json`, command entry points | yes |
 | `config` | Cluster and agent YAML, pydantic schemas | no |
-| `store` | SQLite claim store (append-only, changesets, FTS5) | no |
+| `store` | SQLite intake store: sources, intake decisions, changesets, watermarks, bans, FTS5 fallback (append-only) | no |
 | `cache` | Hash-addressed raw cache | no |
 | `scan` | Input and output guards | no |
 | `llm` | Model access | no |
-| `sources` | arXiv, OpenAlex, local files | no |
-| `curate` | LangGraph curation workflow | no |
+| `sources` | arXiv, OpenAlex (full text from provider endpoints), local files | no |
+| `triage` | Relevance check against the approved context (one structured model call) | no |
 | `engines` | Retrieval engine interface | no |
 | `engine_leanrag` | LeanRAG engine | no |
-| `run` | Curation runs and locking | no |
+| `run` | Intake runs and locking | no |
 | `schedule` | Crontab scheduling | no |
 
 Commands read `--json` through the pattern in `cli.py`: declare a `json_output: JsonOption = False` parameter, call `json_requested(ctx, json_output)` (which also honors the global `rkc --json CMD`, stored as `CliState` in `ctx.obj`), and write with `emit_json(...)`. Data goes to stdout, messages to stderr.
 
 ## Rules
 - Everything fetched or model-written is untrusted data. It never builds file paths, URLs, SQL or shell commands; use hashes, provider-controlled namespaced IDs and parameterized queries instead.
-- The store owns the facts. Changeset IDs, claim status and history come from the store, never from a model or a caller.
+- The original text is the ground truth: it is cached and indexed unchanged, and model-written text (relevance reasons, engine summaries, later notes) is always labelled as generated.
+- The store owns the facts. Changeset IDs, source identity, intake decisions, bans and history come from the store, never from a model or a caller.
 - Scan at every hop: content is scanned before it is stored, and query output is sanitized and, with the output guard on (the default), scanned before it is returned. Input scanning fails closed.
 - Secrets never appear in YAML, the store, logs or output. YAML names a key by variable through `api_key_env`; messages name a missing key by its variable, never its value.
