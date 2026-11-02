@@ -1,8 +1,8 @@
 # Roadmap
 
-Each phase is one feature: planned with `/sdd:feature`, built with `/sdd:implement` and closed with `/sdd:validate`. The phases follow the 14 steps of the archived design (`specs/backlog/2026-10-28-design-v3.1.md`). Each one names the sections of that file to read when its feature spec is written, and the constitution wins wherever the two differ.
+Each phase is one feature: planned with `/sdd:feature`, built with `/sdd:implement` and closed with `/sdd:validate`. Phases name the sections of the archived design (`specs/backlog/2026-10-28-design-v3.1.md`) worth reading when their feature spec is written. That design predates the 2026-11-02 pivot from claim curation to original-text indexing, so the constitution wins wherever the two differ.
 
-Two manual spikes need the owner, network access and, for LeanRAG, real models and Docker: the classifier evaluation (phase 5) and the LeanRAG spike (phase 9). Start them early, alongside phases 1–4. Phases 7–10 depend on them.
+The MVP (phases 1–12) is a secured system that pulls papers, checks them for attacks and relevance, indexes the original text in LeanRAG, and lets agents query it. LeanRAG is now the backbone, so its spike comes first: what it accepts and returns shapes the store and the engine wrapper. The classifier evaluation (phase 5's manual task) needs the owner and network access too, and can start alongside phases 2–4.
 
 ## Phase 1: Scaffolding ✅
 Spec: specs/features/01-scaffolding/
@@ -13,88 +13,77 @@ Goal: a packaged, installable `rkc` with the full quality toolchain and CI in pl
 - [x] GitHub Actions workflow on Python 3.12 and 3.14
 Design reference: "Implementation steps > Step 1", "Naming", "Files to create".
 
-## Phase 2: Configuration and cluster init
+## Phase 2: LeanRAG spike (manual, owner)
+Goal: a measured go or no-go on LeanRAG as published, used on original full text.
+- [ ] Run LeanRAG at a pinned commit on about 50–100 real full-text papers from `fin-model-evaluation`, and record in `docs/spikes/leanrag.md`: input format and chunking, whether a result can be traced back to the original passage (source ID and offsets), where notes could attach at the lowest level, incremental add and removal versus full rebuild, build cost and time per paper, stability, whether injected text survives its summarizer, and retrieval quality on the cluster's example questions
+- [ ] Record the decision and any justified patches. If it fails the go criteria, agree a different existing engine before phase 8
+Design reference: "Step 9", "LeanRAG engine".
+
+## Phase 3: Configuration and cluster init
 Goal: clusters and research agents can be created, validated, approved and paused.
-- [ ] Pydantic models for `cluster.yaml` and agent YAML, with errors that name the file and field
+- [ ] Pydantic models for `cluster.yaml` and agent YAML (context, sources, triage model, caps), with errors that name the file and field
 - [ ] Secrets from the environment or `.env`, redaction, and the approval hash over context, sources and specs
 - [ ] `rkc init`, `rkc agent add | validate | approve | list`, `rkc pause | resume`
 - [ ] ID validation. `approve` needs an interactive terminal
 Design reference: "Step 2", "Cluster layout and configuration".
 
-## Phase 3: Claim store
-Goal: an append-only, history-preserving store for claims and their evidence.
-- [ ] Schema with migrations: sources, claims, evidence, links, changesets, intake log, watermarks, ban list
-- [ ] Derived status, the current-claim rule, as-of reads, the FTS5 keyword index, and `retract`
-- [ ] `rkc log`, `rkc diff`, `rkc show`
-Design reference: "Step 3", "Knowledge store".
+## Phase 4: Intake store and cache
+Goal: an append-only record of what entered the knowledge base and why, with the original text kept unchanged.
+- [ ] Schema with migrations: sources, intake decisions (with relevance reason), runs and changesets, watermarks, ban list
+- [ ] As-of reads, `retract` of a run, and FTS5 over the normalized source text
+- [ ] Hash-addressed cache for payloads and extracted text, NFKC and whitespace normalization, offset locators, cache-only deletion
+- [ ] `rkc log`, `rkc show <source>`, `rkc verify` (cache integrity by hash)
+Design reference: "Step 3", "Step 4", "Knowledge store" (claim tables do not apply).
 
-## Phase 4: Cache and quote verification
-Goal: no claim can cite a quote that is not in its source.
-- [ ] Hash-addressed cache with NFKC and whitespace normalization
-- [ ] Exact-substring quote verification with a length cap, and locators
-- [ ] Cache-only deletion, and `rkc verify`
-Design reference: "Step 4".
-
-## Phase 5: Scanner and ban list (input guard)
-Goal: poisoned content is detected, banned and deleted before it is stored.
+## Phase 5: Scanner, ban list and sandboxed extraction (input guard)
+Goal: poisoned content is detected, banned and deleted before it is stored, indexed or read by a model.
+- [ ] Sandboxed text extraction (PDF and local files) with resource limits, an allowlist of readers, and hidden PDF text as a separate view
 - [ ] Normalization, recursive decoding, linear-time rules, the classifier interface with a loud rules-only mode, and fail-closed policy
-- [ ] Ban actions, the verdict cache, `rkc scan`, `rkc ban list | show | release`
-- [ ] Sandboxed file parsing, and the output sanitizer exported for later use
-- [ ] Security corpus and `scripts/scanner_eval.py` (offline with a stub classifier)
+- [ ] Ban actions, the verdict cache, `rkc scan`, `rkc ban list | show | release`, and the output sanitizer exported for later use
+- [ ] Security corpus (including poisoned PDFs) and `scripts/scanner_eval.py` (offline with a stub classifier)
 - [ ] Manual (owner): run the classifier evaluation and record the default in `docs/spikes/scanner.md`
 Design reference: "Step 5", "Injection defense".
 
-## Phase 6: Model layer and `doctor`
-Goal: any configured model can be called safely, and the environment can be diagnosed.
+## Phase 6: Model layer, relevance triage and `doctor`
+Goal: any configured model can be called safely, papers get a relevance decision, and the environment can be diagnosed.
 - [ ] Role-based chat models, structured calls with one retry, usage counting and scripted fakes
-- [ ] Provenance prompt template with an untrusted block and agent tags
+- [ ] Provenance prompt template with an untrusted block, and the triage call (relevant or not, capped reason)
 - [ ] `rkc doctor` (Python, FTS5, cluster, scanner, classifier, Docker, model connectivity, keys by name only)
-Design reference: "Step 6", "Models".
+Design reference: "Step 6", "Models", and triage in "Curation workflow".
 
 ## Phase 7: Sources
-Goal: articles from arXiv, OpenAlex and local files arrive guarded and deduplicated.
-- [ ] `Article`, the adapter protocol, and the arXiv and OpenAlex adapters (watermarks, abstract reconstruction, retraction flag)
-- [ ] Namespaced identity, ban checks, and the input guard before any write
+Goal: papers from arXiv, OpenAlex and local files arrive as guarded, deduplicated full text.
+- [ ] `Article`, the adapter protocol, and the arXiv adapter (metadata, watermarks, PDF download within the rate limit)
+- [ ] OpenAlex adapter (abstract reconstruction, retraction flag, full text from OpenAlex's content endpoint within its allowance, abstract fallback)
+- [ ] Namespaced identity, ban checks, the input guard before any write, and triage before indexing
 - [ ] `rkc add-file --as literature|experiment|note`
 Design reference: "Step 7", "Sources".
 
-## Phase 8: Curation graph
-Goal: an article becomes verified, challenged claims and links, applied in one transaction.
-- [ ] LangGraph workflow: triage, recall, propose, challenge, revise, verify, apply
-- [ ] Caps on devil's-advocate rounds, mechanical verification, and transactional apply with changesets
-Design reference: "Step 8", "Curation workflow".
-
-## Phase 9: LeanRAG spike (manual, owner)
-Goal: a measured go or no-go on LeanRAG as published.
-- [ ] Run LeanRAG at a pinned commit on about 200 real claims, and record schemas, output shape, cost, stability, conflict survival, scanner results and retrieval quality in `docs/spikes/leanrag.md`
-- [ ] Record the decision and any justified patches. If it fails the go criteria, agree a different existing engine before phase 10
-Design reference: "Step 9", "LeanRAG engine".
-
-## Phase 10: LeanRAG engine, hydration and queries
-Goal: `rkc query` returns hydrated, sanitized, untrusted-marked results through LeanRAG, falling back to keyword search.
-- [ ] Engine protocol, `Hit`, hydration with the output guard, and a reusable contract test
-- [ ] LeanRAG wrapper, Docker compose file, sandboxed build, and rebuild thresholds
+## Phase 8: LeanRAG engine and queries
+Goal: `rkc query` returns sanitized, untrusted-marked results through LeanRAG, each labelled as verbatim source text or engine-generated, falling back to keyword search.
+- [ ] Engine protocol, `Hit` with the verbatim or generated label and source locators, hydration from the store with the output guard, and a reusable contract test
+- [ ] LeanRAG wrapper, Docker compose file, sandboxed build, sync (including removal of retracted sources) and rebuild thresholds
 - [ ] `rkc query`, `rkc engine install | sync | status`
 Design reference: "Step 10", "Engines", "Retrieval", "LeanRAG engine".
 
-## Phase 11: Run orchestration
+## Phase 9: Run orchestration
 Goal: `rkc run` executes an agent end to end, idempotently, with clear exit codes.
-- [ ] Lock, approval check, watermarks, dedupe, input guard, caps, `--dry-run`, engine rebuild, and the run summary
+- [ ] Lock, approval check, watermarks, dedupe, input guard, triage, caps, `--dry-run`, engine sync, and the run summary
 - [ ] Exit codes for caps, locks, approval drift and scanner failure. Respect pause
 Design reference: "Step 11", "Caps and dry-run".
 
-## Phase 12: Scheduling
+## Phase 10: Scheduling
 Goal: agents run on cron without touching anything else in the crontab.
 - [ ] `rkc schedule install | remove | show`, with a fixed command template and validated IDs
 Design reference: "Step 12", "Scheduling".
 
-## Phase 13: Security smoke suite and report
+## Phase 11: Security smoke suite and report
 Goal: evidence that the defense contains injection, including payloads the guards miss.
-- [ ] Cases, network blocker, instrumented stubs, a deliberately vulnerable curator stub, a regression corpus, a best-of-N budget and a `live` mode
+- [ ] Cases, network blocker, instrumented stubs, a deliberately vulnerable stub, a regression corpus, a best-of-N budget and a `live` mode
 - [ ] `scripts/security_smoke.py` writes the report (results per objective, failures with evidence, benign controls, what is not covered)
 Design reference: "Step 13", "Test scenarios", "Injection defense".
 
-## Phase 14: Skills, docs, end-to-end check and release
+## Phase 12: Skills, docs, end-to-end check and release
 Goal: a developer installs `rkc` from PyPI and a coding agent sets it up through skills.
 - [ ] `rkc-setup`, `rkc-query`, `rkc-ops`, `rkc-report`, and `rkc skills install --target`
 - [ ] `docs/limits.md` and a finished README (including Docker for LeanRAG)
@@ -102,5 +91,7 @@ Goal: a developer installs `rkc` from PyPI and a coding agent sets it up through
 Design reference: "Step 14", "Verification".
 
 ## Later / unscheduled
-- Archived design and its future-work list: `specs/backlog/2026-10-28-design-v3.1.md` ("Future work").
-- An MCP wrapper over the CLI, more source adapters, more retrieval engines, tamper-evidence, a review gate, and currency budgets.
+- Notes layer on top of the original text: [specs/backlog/2026-11-02-notes-layer.md](backlog/2026-11-02-notes-layer.md).
+- Claim curation (claims, conflict and refutation links, devil's advocate, quote verification): archived design, "Curation workflow" and "Step 8".
+- An MCP wrapper over the CLI (see the notes-layer backlog file for `mcpc`), more source adapters, more retrieval engines, tamper-evidence, a review gate, and currency budgets.
+- The archived design's future-work list: `specs/backlog/2026-10-28-design-v3.1.md` ("Future work").
