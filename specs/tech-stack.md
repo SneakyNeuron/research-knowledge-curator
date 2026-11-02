@@ -48,6 +48,7 @@ Exact versions are pinned in `pyproject.toml` and `uv.lock` when each dependency
 - Format: `uv run ruff format --check .`
 - Types: `uv run mypy --strict src/` and `uv run mypy tests/` (tests are type-checked with the default settings).
 - Tests: `uv run pytest -q`
+- All of the above in one command: `scripts/check.sh`, which also runs the tests under CI's colour variables (`GITHUB_ACTIONS`, `FORCE_COLOR`, `PY_COLORS`).
 - CI: GitHub Actions runs the same commands as local (lint, format check, both type checks and tests) on Python 3.12 and 3.14 for every push and pull request.
 
 ## Constraints
@@ -63,7 +64,7 @@ Exact versions are pinned in `pyproject.toml` and `uv.lock` when each dependency
 - `src/research_knowledge_curator/`: one module per concern (`cli`, `config`, `store`, `cache`, `scan`, `llm`, `sources`, `triage`, `engines`, `engine_leanrag`, `run`, `schedule`).
 - `docker/`: the LeanRAG compose file.
 - `skills/`: `rkc-setup`, `rkc-query`, `rkc-ops`, `rkc-report`, installed into a host project by `rkc skills install`.
-- `scripts/`: `scanner_eval.py`, `security_smoke.py`.
+- `scripts/`: `check.sh` (every quality gate, plus the tests under CI's colour variables), `scanner_eval.py`, `security_smoke.py`.
 - `tests/`, `tests/fixtures/`, `tests/security/`.
 - `docs/`: `topics.md`, `limits.md`, and `spikes/` for recorded spike results.
 - `specs/`: this constitution, feature specs, and the backlog (including the archived design v3.1, which predates the 2026-11-02 pivot from claim curation to original-text indexing; the constitution wins where they differ).

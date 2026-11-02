@@ -8,7 +8,7 @@ This project uses Spec-Driven Development. Read `specs/mission.md`, `specs/tech-
 - Types: `uv run mypy --strict src/` and `uv run mypy tests/` (tests use default settings)
 - Tests: `uv run pytest -q` (offline: `pytest-socket` blocks the network; shared fixtures, including one that keeps Typer help free of ANSI codes under `GITHUB_ACTIONS`/`FORCE_COLOR`, are in `tests/conftest.py`)
 
-All five must pass before a change is done.
+All five must pass before a change is done. `scripts/check.sh` runs them in order, plus `pytest` under `GITHUB_ACTIONS`, `FORCE_COLOR` and `PY_COLORS` (where Typer forces colour, as in CI), and stops at the first failure.
 
 ## Module map
 `src/research_knowledge_curator/`, one module per concern (from `specs/tech-stack.md`):
