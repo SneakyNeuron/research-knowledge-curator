@@ -1,7 +1,7 @@
 # Mission
 
 ## Vision
-Research Knowledge Curator (`rkc`) is an agent-maintained, injection-defended research knowledge base that any developer can add to a project. Research agents pull new papers on a schedule, keep only what is relevant to a context the user approved, check them for prompt-injection attacks, and index the original full text, unchanged, in a hierarchical retrieval engine (LeanRAG, vendored and adapted so it installs with `rkc` and needs no services). The original text is the ground truth: its lowest level is the source text itself, and later layers add notes to it rather than rewriting it. Coding agents and people query it through a CLI. There is no GUI and no chat application.
+Research Knowledge Curator (`rkc`) is an agent-maintained, injection-defended research knowledge base that any developer can add to a project. Research agents pull new papers on a schedule, keep only what is relevant to a context the user approved, check them for prompt-injection attacks, and index the original full text, unchanged, in a hierarchical retrieval engine (LeanRAG, reimplemented from its published paper so it installs with `rkc` and needs no services). The original text is the ground truth: its lowest level is the source text itself, and later layers add notes to it rather than rewriting it. Coding agents and people query it through a CLI. There is no GUI and no chat application.
 
 ## Audience
 - **Developers who work with coding agents** (Claude Code and similar) and want a living, citable literature base inside their project. They install `rkc` as an isolated tool, and their coding agent sets it up through the shipped `rkc-setup` skill: it analyzes the project, interviews the user, writes the research-agent configuration, and asks the user to approve it.
@@ -31,7 +31,7 @@ Keeping up with research on a fast-moving topic means reading feeds, judging rel
   - Confidentiality of data sent to the model endpoints the user configures. The user chooses the endpoints, and `rkc` neither warns nor restricts.
   - Open-web fetching (including publisher URLs found in metadata), and sources other than arXiv, OpenAlex and local files (Crossref, Semantic Scholar, Wikipedia, Wikidata and Google Scholar are deferred).
   - Tamper-evidence (hash chains, signatures), a topic taxonomy inside a cluster, cross-cluster queries, currency budgets, and a human review gate on every change.
-  - Designing an in-house retrieval engine from scratch. LeanRAG is vendored (MIT, with attribution) and adapted: packaging, SQLite storage instead of MySQL, an embedded vector index, and partial updates. Any other change to its algorithm needs a measured reason.
+  - Designing an in-house retrieval algorithm. `rkc` reimplements LeanRAG's published algorithm (Zhang et al., AAAI 2026) with credit to the authors, because the upstream repository has no license and its code cannot be redistributed. The reimplementation adds only what `rkc` needs: packaging, SQLite storage instead of MySQL, an embedded vector index, and partial updates. Any other departure from the paper needs a measured reason.
   - Infrastructure the user has to run, such as database servers or Docker. Model endpoints are the only services `rkc` talks to besides the sources.
   - Modifying the host project. `rkc` writes only inside its cluster directory, and writes skills only to a directory the user names.
 
@@ -44,7 +44,7 @@ Keeping up with research on a fast-moving topic means reading feeds, judging rel
 - The package is published on PyPI under the MIT license, with docs that state what the system does and does not establish.
 
 ## Tone & principles
-- **The best part is no part. Do not reinvent the wheel.** Every component must serve a requirement in Scope. Mature libraries are used instead of building our own, and LeanRAG's published algorithm is vendored rather than reinvented.
+- **The best part is no part. Do not reinvent the wheel.** Every component must serve a requirement in Scope. Mature libraries are used instead of building our own, and LeanRAG's published algorithm is reimplemented faithfully rather than redesigned.
 - **The original text is the ground truth.** It is stored and indexed unchanged. Anything a model writes (relevance reasons, engine summaries, later notes) sits on top of it, is marked as generated, and points back to the source text.
 - **The store owns the facts.** The engine only suggests which passages are relevant. Source identity, intake decisions, retractions, bans and history always come from the store.
 - **Nothing is deleted from the store.** Changes are new rows in changesets. The raw cache is never edited, and the only deletions are cache copies of content the input guard blocks.
