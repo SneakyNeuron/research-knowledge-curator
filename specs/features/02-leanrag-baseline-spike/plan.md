@@ -48,31 +48,31 @@ Its chunker (`file_chunk.chunk_documents`) keeps `{hash_code, text}` only, drops
 - The cloned upstream code: no file in it is edited. No upstream code or prompt text is copied into a committed file.
 
 ## Group 1: Harness skeleton, environment and model adapter
-- [ ] `.gitignore`: ignore the upstream clone and the harness's work directory (venv, generated `config.yaml`, tiktoken cache, downloaded datasets, Milvus Lite files, logs, raw build outputs before export), both under `scripts/spikes/leanrag/`.
-- [ ] Setup script:
+- [x] `.gitignore`: ignore the upstream clone and the harness's work directory (venv, generated `config.yaml`, tiktoken cache, downloaded datasets, Milvus Lite files, logs, raw build outputs before export), both under `scripts/spikes/leanrag/`.
+- [x] Setup script:
   - Clones upstream into the gitignored directory, checks out `ee2d524cf6e216712122bdbc1fecd0d5b3eec7d3` and verifies `HEAD`.
   - Creates the harness venv with `uv` on Python 3.12 and installs upstream's `requirements.txt` exactly, plus `pytest`.
   - Prefetches tiktoken's `cl100k_base` into a `TIKTOKEN_CACHE_DIR` inside the work directory, so tests and later runs need no network for it.
   - Is idempotent: a second run verifies rather than re-clones.
-- [ ] `docker-compose.yml` for MySQL:
+- [x] `docker-compose.yml` for MySQL:
   - image `mysql:8.4.13` (exact tag), published only on `127.0.0.1:4321`;
   - upstream's fixed credentials;
   - `root` authenticating with `mysql_native_password` (the server's `--mysql-native-password=ON` plus whatever init step or authentication policy makes root use it);
   - a named volume that the teardown command removes.
-- [ ] Config writer: builds upstream's `config.yaml` with exactly the keys upstream reads (`deepseek.model`, `deepseek.api_key`, `deepseek.base_url`, `glm.model`, `glm.base_url`), using `yaml.safe_dump`, into the work directory. Values come from environment variables. `deepseek.api_key` is a fixed non-secret placeholder, since vLLM runs without `--api-key`. Driver scripts run with that directory as the working directory and upstream on `sys.path`. That means both the clone's root (for `prompt`, `tools` and `database_utils`) and its `GraphExtraction/`, whose `chunk.py` imports `_utils` as a top-level module.
-- [ ] Model adapter: an `InstanceManager` from upstream's `tools.utils`, pointed at the chat vLLM instance and wrapped so that every call:
+- [x] Config writer: builds upstream's `config.yaml` with exactly the keys upstream reads (`deepseek.model`, `deepseek.api_key`, `deepseek.base_url`, `glm.model`, `glm.base_url`), using `yaml.safe_dump`, into the work directory. Values come from environment variables. `deepseek.api_key` is a fixed non-secret placeholder, since vLLM runs without `--api-key`. Driver scripts run with that directory as the working directory and upstream on `sys.path`. That means both the clone's root (for `prompt`, `tools` and `database_utils`) and its `GraphExtraction/`, whose `chunk.py` imports `_utils` as a top-level module.
+- [x] Model adapter: an `InstanceManager` from upstream's `tools.utils`, pointed at the chat vLLM instance and wrapped so that every call:
   - adds `temperature=0` and the configured `seed`;
   - logs the prompt length in tokens and keeps the maximum;
   - counts empty responses (upstream swallows request errors, including vLLM rejecting an over-length request, and returns `""`).
-- [ ] `check` command: verifies the upstream commit and a clean upstream working tree, a PyMySQL login from the harness venv with upstream's credentials, the chat model answering, the embedding endpoint returning vectors of length 1024, and both instances' `/metrics` endpoints. Fails with a message naming what is wrong.
-- [ ] `scripts/spikes/leanrag/pytest.ini`, so the harness's tests do not pick up the repository's pytest configuration (whose `--disable-socket` needs `pytest-socket`). The harness test command, documented in the README and used by V3 to V6: `cd scripts/spikes/leanrag && TIKTOKEN_CACHE_DIR=<work>/tiktoken <venv>/bin/pytest -q`.
-- [ ] `README.md` in the harness:
+- [x] `check` command: verifies the upstream commit and a clean upstream working tree, a PyMySQL login from the harness venv with upstream's credentials, the chat model answering, the embedding endpoint returning vectors of length 1024, and both instances' `/metrics` endpoints. Fails with a message naming what is wrong.
+- [x] `scripts/spikes/leanrag/pytest.ini`, so the harness's tests do not pick up the repository's pytest configuration (whose `--disable-socket` needs `pytest-socket`). The harness test command, documented in the README and used by V3 to V6: `cd scripts/spikes/leanrag && TIKTOKEN_CACHE_DIR=<work>/tiktoken <venv>/bin/pytest -q`.
+- [x] `README.md` in the harness:
   - prerequisites (Docker, an NVIDIA GPU, vLLM);
   - the two `vllm serve` command lines for one RTX 4090 (memory split, `--max-model-len 32768`, `--kv-cache-dtype fp8`, `--runner pooling` for the embedding model, the dev and baseline chat models), and the 16k fallback;
   - the environment variables and the test command;
   - the full run order: setup, check, generate, chunk, synthetic builds ×3, queries, measurement, `mix` download, chunk and build, `mix` queries and judge, teardown.
-- [ ] `pyproject.toml`: per-file ignore of `S101` for the harness's tests, so `ruff check .` stays clean.
-- [ ] Tests (harness venv, written first): with `requests.post` replaced by a fake transport, the adapter sends `temperature=0`, the configured `seed` and upstream's `enable_thinking: False` on every call, counts an error or empty response, and records the longest prompt. The config writer emits exactly the five keys and no secret.
+- [x] `pyproject.toml`: per-file ignore of `S101` for the harness's tests, so `ruff check .` stays clean.
+- [x] Tests (harness venv, written first): with `requests.post` replaced by a fake transport, the adapter sends `temperature=0`, the configured `seed` and upstream's `enable_thinking: False` on every call, counts an error or empty response, and records the longest prompt. The config writer emits exactly the five keys and no secret.
 
 ## Group 2: Corpus spec and generator
 - [ ] `tests/fixtures/leanrag_baseline/corpus_spec.yaml`: 40 article entries in the `fin-model-evaluation` domain (walk-forward and purged or combinatorial cross-validation, embargoes, deflated Sharpe ratio and probability of backtest overfitting, look-ahead, survivorship and target leakage, normalisation leaks, hyperparameter search and multiple testing). Each entry has a stable ID `synthetic:NN`, a title, fictional authors and venue, a section outline, and a target length of about 3,000 words. Planted items, each with an ID, a `kind` (`fact`, `disagreement`, `canary`, `metachar`) and the section it goes in:

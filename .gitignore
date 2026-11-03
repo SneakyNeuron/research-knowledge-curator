@@ -11,3 +11,9 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+
+# LeanRAG baseline spike harness (phase 2): the upstream clone and the work
+# directory (venv, generated config.yaml, tiktoken cache, downloaded datasets,
+# Milvus Lite files, logs, raw build outputs before export) are never committed.
+scripts/spikes/leanrag/upstream/
+scripts/spikes/leanrag/work/

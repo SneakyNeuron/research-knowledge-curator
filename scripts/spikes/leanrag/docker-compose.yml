@@ -1,0 +1,30 @@
+# MySQL for upstream LeanRAG, which hard-codes localhost:4321 as root/123.
+# Throwaway and localhost-only: published on 127.0.0.1 only, data in a named
+# volume that teardown.sh removes (docker compose down --volumes).
+name: leanrag-spike
+
+services:
+  mysql:
+    image: mysql:8.4.13
+    command:
+      # Upstream's pinned PyMySQL cannot use caching_sha2_password without the
+      # `cryptography` package, which upstream's pins do not include.
+      - --mysql-native-password=ON
+      # New accounts default to it; the init step below converts root explicitly.
+      - --authentication-policy=*:mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: "123"  # upstream's fixed throwaway credential
+    ports:
+      - "127.0.0.1:4321:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # Runs once, on an empty volume: makes root use mysql_native_password.
+      - ./mysql-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p123", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  mysql-data:
