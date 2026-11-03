@@ -179,3 +179,24 @@ def test_reset_starts_a_new_stage(adapter: ChatAdapter, monkeypatch: pytest.Monk
     assert stats.calls == 1
     assert stats.empty_responses == 0
     assert stats.max_prompt_tokens == len(ENC.encode("x"))
+
+
+def test_a_configured_temperature_is_sent_instead_of_zero_and_still_overrides_callers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    transport = FakeTransport(reply("a"), reply("b"))
+    install(monkeypatch, transport)
+    retry = ChatAdapter(Settings.from_env(ENV), temperature=0.7)
+
+    retry.generate_text("plain")
+    asyncio.run(retry.generate_text_asy("caller asks for cold", temperature=0, seed=1))
+
+    for sent in transport.requests:
+        assert sent["json"]["temperature"] == 0.7
+        assert sent["json"]["seed"] == 77
+
+
+@pytest.mark.parametrize("temperature", [-0.1, float("nan"), float("inf")])
+def test_an_invalid_temperature_is_refused(temperature: float) -> None:
+    with pytest.raises(ValueError, match="temperature"):
+        ChatAdapter(Settings.from_env(ENV), temperature=temperature)

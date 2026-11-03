@@ -88,6 +88,8 @@ class GeneratedBy:
     model: str
     revision: str
     seed: int
+    # 0 except when retrying a failed article (``--retry-temperature``).
+    temperature: float = 0
 
 
 @dataclass(frozen=True)
@@ -448,6 +450,7 @@ def article_record(
             "model": generated_by.model,
             "revision": generated_by.revision,
             "seed": generated_by.seed,
+            "temperature": generated_by.temperature,
         },
         "file": f"articles/{article.file_name}",
         "characters": len(result.text),

@@ -92,7 +92,7 @@ Its chunker (`file_chunk.chunk_documents`) keeps `{hash_code, text}` only, drops
   - normalisation is idempotent and leaves planted strings intact;
   - a planted string the model's prose happens to repeat is detected and fails the article;
   - canary tokens and `.invalid` URLs survive normalisation unchanged.
-- [ ] Retry temperature (owner decision after hardening): `generate` takes `--retry-temperature T` (a float above 0, allowed only with `--only`). Those calls use `T` instead of 0 with the configured seed, and `generated_by` records the temperature for every article (0 normally). The failure message and README step 5 point to it. Tests: the flag is refused without `--only` and for `T <= 0`; the fake transport sees `T` on retry calls and 0 otherwise; `generated_by` records it.
+- [x] Retry temperature (owner decision after hardening): `generate` takes `--retry-temperature T` (a float above 0, allowed only with `--only`). Those calls use `T` instead of 0 with the configured seed, and `generated_by` records the temperature for every article (0 normally). The failure message and README step 5 point to it. Tests: the flag is refused without `--only` and for `T <= 0`; the fake transport sees `T` on retry calls and 0 otherwise; `generated_by` records it.
 
 ## Group 3: Chunk export and offset map
 - [ ] Chunk script: runs upstream's `file_chunk.chunk_documents` unchanged (`max_token_size=1024`, `overlap_token_size=128`, `cl100k_base`) over the articles in ID order. Writes its output unchanged as `chunks.json`, plus `chunk_map.jsonl` with, per chunk, the article ID, window index, token start and end, character start and end into the article text, and a `split_char` flag.

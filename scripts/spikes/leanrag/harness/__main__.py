@@ -3,10 +3,12 @@
 work/venv/bin/python -m harness check
 work/venv/bin/python -m harness write-config
 work/venv/bin/python -m harness generate --model-revision <HF commit> [--only synthetic:NN]
+    [--retry-temperature T]
 """
 
 import argparse
 import logging
+import math
 import os
 import sys
 from pathlib import Path
@@ -47,7 +49,9 @@ def cmd_check() -> int:
     return 0
 
 
-def cmd_generate(spec: Path, out: Path, revision: str, only: list[str]) -> int:
+def cmd_generate(
+    spec: Path, out: Path, revision: str, only: list[str], temperature: float = 0
+) -> int:
     from harness.adapter import ChatAdapter
     from harness.generate import CorpusSpecError, GeneratedBy, generate_corpus
 
@@ -56,8 +60,10 @@ def cmd_generate(spec: Path, out: Path, revision: str, only: list[str]) -> int:
     except SettingsError as exc:
         print(f"generate: {exc}", file=sys.stderr)
         return 1
-    adapter = ChatAdapter(settings)
-    generated_by = GeneratedBy(model=settings.chat_model, revision=revision, seed=settings.seed)
+    adapter = ChatAdapter(settings, temperature=temperature)
+    generated_by = GeneratedBy(
+        model=settings.chat_model, revision=revision, seed=settings.seed, temperature=temperature
+    )
     try:
         failures, warnings = generate_corpus(
             spec,
@@ -82,7 +88,9 @@ def cmd_generate(spec: Path, out: Path, revision: str, only: list[str]) -> int:
     if failures:
         print(
             "generate: some articles failed and were not written; regenerate them with "
-            "--only and another LEANRAG_SEED (the seed is recorded per article)",
+            "--only synthetic:NN --retry-temperature T (T > 0, e.g. 0.7) and another "
+            "LEANRAG_SEED (at temperature 0 a new seed changes nothing; both are recorded "
+            "per article)",
             file=sys.stderr,
         )
         return 1
@@ -108,8 +116,20 @@ def main(argv: list[str] | None = None) -> int:
     generate.add_argument(
         "--only", action="append", default=[], metavar="synthetic:NN", help="repeatable"
     )
+    generate.add_argument(
+        "--retry-temperature",
+        type=float,
+        metavar="T",
+        help="retry failed articles at temperature T > 0 instead of 0 (only with --only)",
+    )
     args = parser.parse_args(argv)
-    if args.command == "generate":  # resolve before moving into the work directory
+    if args.command == "generate":
+        retry = args.retry_temperature
+        if retry is not None and not args.only:
+            generate.error("--retry-temperature is allowed only with --only")
+        if retry is not None and not (math.isfinite(retry) and retry > 0):
+            generate.error(f"--retry-temperature must be a finite number above 0, not {retry}")
+        # Resolve before moving into the work directory.
         args.spec, args.out = args.spec.resolve(), args.out.resolve()
 
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
@@ -118,7 +138,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "check":
         return cmd_check()
     if args.command == "generate":
-        return cmd_generate(args.spec, args.out, args.model_revision, args.only)
+        temperature = args.retry_temperature if args.retry_temperature is not None else 0
+        return cmd_generate(args.spec, args.out, args.model_revision, args.only, temperature)
     return cmd_write_config()
 
 

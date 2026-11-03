@@ -327,7 +327,12 @@ def test_write_outputs_writes_texts_and_jsonl(tmp_path: Path) -> None:
     assert record["id"] == "synthetic:01"
     assert record["synthetic"] is True
     assert record["authors"] == ["Ilse Marwood", "Tomasz Brenneke"]
-    assert record["generated_by"] == {"model": "chat-model", "revision": "abc123", "seed": 42}
+    assert record["generated_by"] == {
+        "model": "chat-model",
+        "revision": "abc123",
+        "seed": 42,
+        "temperature": 0,
+    }
     assert record["file"] == "articles/synthetic-01.txt"
     planted = record["planted"][0]
     assert text[planted["start"] : planted["end"]] == FACT

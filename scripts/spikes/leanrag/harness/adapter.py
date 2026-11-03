@@ -3,9 +3,10 @@
 Upstream's request shape and prompt truncation are kept by calling its
 ``tools.utils.InstanceManager`` unchanged. The wrapper only:
 
-- adds ``temperature=0`` and the configured ``seed`` to every call (as request
-  kwargs, which upstream forwards into the request body next to its own
-  ``enable_thinking: False``);
+- adds ``temperature=0`` (or the adapter's configured temperature, used only to
+  retry a failed corpus article) and the configured ``seed`` to every call (as
+  request kwargs, which upstream forwards into the request body next to its own
+  ``enable_thinking: False``), overriding whatever the caller passes;
 - logs each call's prompt length in tokens and keeps the maximum;
 - counts empty responses. Upstream catches every request error (including vLLM
   rejecting an over-length prompt), prints it and returns ``""``, so an empty
@@ -18,6 +19,7 @@ first message is capped where upstream caps it.
 """
 
 import logging
+import math
 import threading
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -44,11 +46,14 @@ class CallStats:
 class ChatAdapter:
     """Drop-in for ``InstanceManager.generate_text`` and ``generate_text_asy``."""
 
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, settings: Settings, temperature: float = 0) -> None:
+        if not math.isfinite(temperature) or temperature < 0:
+            raise ValueError(f"temperature must be a finite number >= 0, not {temperature}")
         make_upstream_importable()
         from tools.utils import InstanceManager  # upstream, imported from the clone
 
         self.seed = settings.seed
+        self.temperature = temperature
         self.model = settings.chat_model
         self._manager = InstanceManager(
             url=settings.chat.host_url,
@@ -96,7 +101,7 @@ class ChatAdapter:
         return self._record(prompt, system_prompt, history, response)
 
     def _kwargs(self, kwargs: dict[str, Any]) -> dict[str, Any]:
-        return {**kwargs, "temperature": 0, "seed": self.seed}
+        return {**kwargs, "temperature": self.temperature, "seed": self.seed}
 
     def _prompt_tokens(
         self, prompt: str, system_prompt: str | None, history: Sequence[dict[str, str]]
