@@ -92,7 +92,7 @@ All commands run from `scripts/spikes/leanrag/` with the variables above exporte
 2. **MySQL**: `docker compose up -d --wait`. This starts `mysql:8.4.13` on `127.0.0.1:4321` with upstream's fixed `root`/`123`, and root uses `mysql_native_password`.
 3. **Models**: start both `vllm serve` instances (above).
 4. **Check**: `work/venv/bin/python -m harness check`. Verifies the upstream commit and a clean working tree, a PyMySQL login with upstream's credentials, the chat model answering, 1024-length embeddings and both `/metrics` endpoints. It names whatever is wrong.
-5. **Generate** the synthetic corpus from `tests/fixtures/leanrag_baseline/corpus_spec.yaml` with the baseline chat model.
+5. **Generate** the synthetic corpus with the baseline chat model: `work/venv/bin/python -m harness generate --model-revision <commit>`, where `<commit>` is the Hugging Face commit of the served chat model. It reads `tests/fixtures/leanrag_baseline/corpus_spec.yaml`, asks the model for each section's prose (canary payloads are never shown to it), inserts every planted item verbatim as its own paragraph, NFKC- and whitespace-normalises the text, and writes `articles/synthetic-NN.txt` and `articles.jsonl` (with `generated_by` and each planted item's character offsets) into the fixture directory. An article whose prose repeats a planted string fails and is not written; regenerate it with another seed, which is recorded per article: `LEANRAG_SEED=<other> work/venv/bin/python -m harness generate --model-revision <commit> --only synthetic:NN`. Articles outside 2,500-3,500 words are reported as warnings. `--out work/dev-corpus` writes elsewhere, for development runs.
 6. **Chunk** the synthetic corpus with upstream's chunker and write the offset map.
 7. **Synthetic builds ×3**: three full builds (extraction, duplicate-entity merge, hierarchical clustering) with identical models, parameters and seed.
 8. **Queries**: run the approved questions against each build, and run the context-string comparison with upstream's `query_graph` once.
@@ -102,4 +102,4 @@ All commands run from `scripts/spikes/leanrag/` with the variables above exporte
 12. **`mix` queries and judge**: the 130 questions, then the pairwise judge against upstream's published answers.
 13. **Teardown**: `./teardown.sh`. Stops MySQL and removes its data volume. Afterwards `docker volume ls` shows no `leanrag-spike` volume. To remove the harness's local state too, delete `upstream/` and `work/`.
 
-Steps 5 to 12 are harness commands added by the later groups of the phase 2 plan.
+Steps 6 to 12 are harness commands added by the later groups of the phase 2 plan.

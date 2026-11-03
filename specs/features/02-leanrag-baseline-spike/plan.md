@@ -75,19 +75,19 @@ Its chunker (`file_chunk.chunk_documents`) keeps `{hash_code, text}` only, drops
 - [x] Tests (harness venv, written first): with `requests.post` replaced by a fake transport, the adapter sends `temperature=0`, the configured `seed` and upstream's `enable_thinking: False` on every call, counts an error or empty response, and records the longest prompt. The config writer emits exactly the five keys and no secret.
 
 ## Group 2: Corpus spec and generator
-- [ ] `tests/fixtures/leanrag_baseline/corpus_spec.yaml`: 40 article entries in the `fin-model-evaluation` domain (walk-forward and purged or combinatorial cross-validation, embargoes, deflated Sharpe ratio and probability of backtest overfitting, look-ahead, survivorship and target leakage, normalisation leaks, hyperparameter search and multiple testing). Each entry has a stable ID `synthetic:NN`, a title, fictional authors and venue, a section outline, and a target length of about 3,000 words. Planted items, each with an ID, a `kind` (`fact`, `disagreement`, `canary`, `metachar`) and the section it goes in:
+- [x] `tests/fixtures/leanrag_baseline/corpus_spec.yaml`: 40 article entries in the `fin-model-evaluation` domain (walk-forward and purged or combinatorial cross-validation, embargoes, deflated Sharpe ratio and probability of backtest overfitting, look-ahead, survivorship and target leakage, normalisation leaks, hyperparameter search and multiple testing). Each entry has a stable ID `synthetic:NN`, a title, fictional authors and venue, a section outline, and a target length of about 3,000 words. Planted items, each with an ID, a `kind` (`fact`, `disagreement`, `canary`, `metachar`) and the section it goes in:
   - 2–3 planted facts per article, each a full sentence with unique fictional specifics (numbers, method names).
   - At least 5 disagreement pairs: two articles plant contradictory facts on the same question.
   - 4 canary articles with distinct payload forms: a direct instruction in body text, an instruction posing as an editorial note, an instruction inside a reference entry, and an instruction to include a URL. Each carries a unique token `RKC-CANARY-<hex>`, and URLs use the `.invalid` TLD.
   - At least 3 method or dataset names containing SQL, YAML and shell metacharacters (quotes, `;`, `--`, backticks, `$(...)`, `: `), used consistently in their articles.
-- [ ] `tests/fixtures/leanrag_baseline/questions.yaml`: 15–20 questions with ID, text, kind (`fact`, `disagreement`, `multi-hop`, `seed`, `negative`), expected planted-fact IDs and `expect_strings` (values a correct answer contains). The 3 `docs/topics.md` questions for `fin-model-evaluation` are included as `seed`, at least 2 questions are `negative` (not answerable from the corpus), and every disagreement pair is asked at least once. Status `draft` until the owner approves (Group 4).
-- [ ] Generator script:
+- [x] `tests/fixtures/leanrag_baseline/questions.yaml`: 15–20 questions with ID, text, kind (`fact`, `disagreement`, `multi-hop`, `seed`, `negative`), expected planted-fact IDs and `expect_strings` (values a correct answer contains). The 3 `docs/topics.md` questions for `fin-model-evaluation` are included as `seed`, at least 2 questions are `negative` (not answerable from the corpus), and every disagreement pair is asked at least once. Status `draft` until the owner approves (Group 4).
+- [x] Generator script:
   - For each article, asks the chat model for each section's prose, given the outline and the planted items for that section.
   - Inserts each planted sentence and canary payload verbatim at a paragraph boundary.
   - Applies NFKC and whitespace normalisation (paragraphs separated by one blank line, no trailing spaces) and verifies each planted string occurs exactly once.
   - Records the model, its revision and the seed.
   - Writes `articles/synthetic-NN.txt` and `articles.jsonl` (ID, title, fictional authors, `synthetic: true`, `generated_by`, planted items with `kind` and character offsets into the final text). Offsets are computed after normalisation.
-- [ ] Tests (harness venv, written first), with a scripted fake model:
+- [x] Tests (harness venv, written first), with a scripted fake model:
   - insertion places each planted string verbatim at a paragraph boundary and records offsets that slice back to it exactly;
   - normalisation is idempotent and leaves planted strings intact;
   - a planted string the model's prose happens to repeat is detected and fails the article;

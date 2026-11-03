@@ -16,6 +16,11 @@ UPSTREAM_DIR = HARNESS_DIR / "upstream"
 WORK_DIR = HARNESS_DIR / "work"
 VENV_DIR = WORK_DIR / "venv"
 TIKTOKEN_DIR = WORK_DIR / "tiktoken"
+REPO_DIR = HARNESS_DIR.parents[2]
+# Committed fixtures: the parity baseline phase 8 reads (outlives the harness).
+FIXTURE_DIR = REPO_DIR / "tests" / "fixtures" / "leanrag_baseline"
+CORPUS_SPEC = FIXTURE_DIR / "corpus_spec.yaml"
+QUESTIONS = FIXTURE_DIR / "questions.yaml"
 
 UPSTREAM_URL = "https://github.com/KnowledgeXLab/LeanRAG.git"
 UPSTREAM_COMMIT = "ee2d524cf6e216712122bdbc1fecd0d5b3eec7d3"

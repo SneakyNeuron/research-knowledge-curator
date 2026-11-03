@@ -1,0 +1,126 @@
+# Questions for the synthetic LeanRAG baseline (phase 2, spec R5).
+#
+# kind: fact, disagreement, multi-hop, seed (the docs/topics.md questions for
+# fin-model-evaluation, verbatim) or negative (not answerable from the corpus).
+# expected: planted item IDs from corpus_spec.yaml that a correct retrieval
+# reaches. expect_strings: values a correct answer contains (each occurs in one
+# of the expected items' texts). Negative questions expect nothing.
+#
+# The owner reviews this file, edits it as needed and sets `status: approved`
+# with the date in `approved` before the first baseline build (Group 4).
+status: draft
+approved: null
+questions:
+  - id: q01
+    kind: seed
+    text: "Which methods are recommended to evaluate trading or forecasting models without backtest overfitting (walk-forward, purged or combinatorial cross-validation, deflated Sharpe ratio)?"
+    expected: [s01-f1, s02-f1, s03-f1, s05-f1, s06-f1]
+    expect_strings: ["walk-forward", "purged", "deflated Sharpe ratio"]
+
+  - id: q02
+    kind: seed
+    text: "What causes data leakage in financial machine-learning pipelines, and how do papers propose to detect or prevent it?"
+    expected: [s07-f1, s07-f3, s09-f1, s10-d1, s21-f1, s28-f2, s32-f1]
+    expect_strings: ["look-ahead", "full sample"]
+
+  - id: q03
+    kind: seed
+    text: "How should hyperparameter search be done for financial time series, and where do papers disagree?"
+    expected: [s11-f1, s13-d1, s23-d1, s33-f1]
+    expect_strings: ["nested", "random search", "Bayesian optimisation"]
+
+  - id: q04
+    kind: disagreement
+    text: "How long does the embargo after each test fold need to be on the Vardal daily equity panel with 10-day labels?"
+    expected: [s04-d1, s16-d1]
+    expect_strings: ["1%", "5%"]
+
+  - id: q05
+    kind: disagreement
+    text: "Does combinatorial purged cross-validation lower the probability of backtest overfitting on the Meridian-40 futures panel compared with walk-forward evaluation?"
+    expected: [s03-d1, s06-d1]
+    expect_strings: ["0.12", "0.38"]
+
+  - id: q06
+    kind: disagreement
+    text: "On the Orrin-12 benchmark, does Bayesian optimisation find better strategy settings than random search?"
+    expected: [s13-d1, s23-d1]
+    expect_strings: ["0.31", "0.02"]
+
+  - id: q07
+    kind: disagreement
+    text: "How much does scaling features with full-sample statistics inflate the backtested Sharpe ratio of the Kestrel momentum model?"
+    expected: [s10-d1, s22-d1]
+    expect_strings: ["0.4", "0.02"]
+
+  - id: q08
+    kind: disagreement
+    text: "By how much does survivorship bias overstate annual returns in the Tessaly Mid-Cap Universe?"
+    expected: [s08-d1, s20-d1]
+    expect_strings: ["1.9", "0.3"]
+
+  - id: q09
+    kind: disagreement
+    text: "Should the Kalvik FX carry model be refit monthly or quarterly in walk-forward testing?"
+    expected: [s01-d1, s31-d1]
+    expect_strings: ["0.71", "0.66"]
+
+  - id: q10
+    kind: fact
+    text: "How many train-test combinations and backtest paths come from splitting the Meridian-40 sample into 10 groups with 2 test groups per split?"
+    expected: [s03-f1]
+    expect_strings: ["45", "9"]
+
+  - id: q11
+    kind: fact
+    text: "Which panel do the event-driven samples in the label-uniqueness study come from, and how many labelled events does it hold?"
+    expected: [s15-m1]
+    expect_strings: ["TICK`s`-$(EVT)-2019", "1.8 million"]
+
+  - id: q12
+    kind: fact
+    text: "Which search protocol do the random-search experiments follow, and what does it fix before any hyperparameter is drawn?"
+    expected: [s23-m1]
+    expect_strings: ["Fold Plan: nested - strict #2", "outer folds"]
+
+  - id: q13
+    kind: fact
+    text: "What share of stories in the Corvid newswire archive carried a timestamp earlier than their actual first distribution?"
+    expected: [s19-f1]
+    expect_strings: ["8.6%"]
+
+  - id: q14
+    kind: fact
+    text: "How much did using the test fold for early stopping overstate out-of-sample AUC for gradient-boosted models?"
+    expected: [s32-f1]
+    expect_strings: ["0.031"]
+
+  - id: q15
+    kind: fact
+    text: "Which dataset does the comparison of cross-sectional and temporal panel splits use, and how many firms does it cover?"
+    expected: [s38-m1]
+    expect_strings: ["Saltdal", "2,300"]
+
+  - id: q16
+    kind: multi-hop
+    text: "On the futures panel where combinatorial purged cross-validation was compared with walk-forward evaluation, what was the probability of backtest overfitting for the family of 120 moving-average rules?"
+    expected: [s03-d1, s06-f1]
+    expect_strings: ["Meridian-40", "0.37"]
+
+  - id: q17
+    kind: multi-hop
+    text: "The Pellucid order-flow model appears in studies of intraday refitting and of transaction costs. What is its hit rate with per-session refits, and what is its Sharpe ratio after costs?"
+    expected: [s14-f1, s30-f1]
+    expect_strings: ["53.4%", "0.4"]
+
+  - id: q18
+    kind: negative
+    text: "What Sharpe ratio did reinforcement-learning trading agents achieve on the Copperline commodity panel?"
+    expected: []
+    expect_strings: []
+
+  - id: q19
+    kind: negative
+    text: "Which central bank policy-rate announcements were used as features in the Larch bond-return model?"
+    expected: []
+    expect_strings: []
