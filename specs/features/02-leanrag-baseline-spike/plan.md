@@ -95,15 +95,15 @@ Its chunker (`file_chunk.chunk_documents`) keeps `{hash_code, text}` only, drops
 - [x] Retry temperature (owner decision after hardening): `generate` takes `--retry-temperature T` (a float above 0, allowed only with `--only`). Those calls use `T` instead of 0 with the configured seed, and `generated_by` records the temperature for every article (0 normally). The failure message and README step 5 point to it. Tests: the flag is refused without `--only` and for `T <= 0`; the fake transport sees `T` on retry calls and 0 otherwise; `generated_by` records it.
 
 ## Group 3: Chunk export and offset map
-- [ ] Chunk script: runs upstream's `file_chunk.chunk_documents` unchanged (`max_token_size=1024`, `overlap_token_size=128`, `cl100k_base`) over the articles in ID order. Writes its output unchanged as `chunks.json`, plus `chunk_map.jsonl` with, per chunk, the article ID, window index, token start and end, character start and end into the article text, and a `split_char` flag.
-- [ ] Offset mapper:
+- [x] Chunk script: runs upstream's `file_chunk.chunk_documents` unchanged (`max_token_size=1024`, `overlap_token_size=128`, `cl100k_base`) over the articles in ID order. Writes its output unchanged as `chunks.json`, plus `chunk_map.jsonl` with, per chunk, the article ID, window index, token start and end, character start and end into the article text, and a `split_char` flag.
+- [x] Offset mapper:
   - Re-encodes each article with the same tiktoken encoding and maps token windows to byte offsets, then to character offsets.
   - A window that starts or ends inside a multi-byte character (whose decoded text then has U+FFFD at that edge) is widened to whole characters and gets `split_char` set.
   - Verifies that each mapped span, after upstream's own post-processing (`strip()`, then removing `\n`), equals the chunk's `text`. For flagged windows, the comparison drops the partial character from the span's edge and the U+FFFD from the chunk text's edge.
   - Verifies that `md5` of the decoded window equals `hash_code`.
   - Maps several chunks with the same `hash_code` to several spans (upstream keys chunks by hash).
   - The number of flagged windows is reported.
-- [ ] Tests (harness venv, written first): ASCII text; multi-byte characters (`é`, `—`, `β`) at and across window boundaries, including a flagged window and its edge comparison; overlapping windows; a final short window; an article shorter than one window; duplicate chunk text in two articles giving one `hash_code` with two spans; a span whose post-processed text does not match the chunk text fails loudly.
+- [x] Tests (harness venv, written first): ASCII text; multi-byte characters (`é`, `—`, `β`) at and across window boundaries, including a flagged window and its edge comparison; overlapping windows; a final short window; an article shorter than one window; duplicate chunk text in two articles giving one `hash_code` with two spans; a span whose post-processed text does not match the chunk text fails loudly.
 
 ## Group 4: Corpus generation, approval and the fixture-integrity test (owner runs the model)
 - [ ] Owner runs the generator with the baseline chat model and reviews a sample of articles. The agent fixes generator problems the review finds and regenerates.

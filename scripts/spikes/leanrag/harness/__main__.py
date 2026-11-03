@@ -4,6 +4,7 @@ work/venv/bin/python -m harness check
 work/venv/bin/python -m harness write-config
 work/venv/bin/python -m harness generate --model-revision <HF commit> [--only synthetic:NN]
     [--retry-temperature T]
+work/venv/bin/python -m harness chunk [--fixture DIR] [--out DIR]
 """
 
 import argparse
@@ -98,6 +99,19 @@ def cmd_generate(
     return 0
 
 
+def cmd_chunk(fixture: Path, out: Path) -> int:
+    from harness.chunk import ChunkMapError, run_chunk
+
+    try:
+        chunks_path, map_path = run_chunk(fixture, out)
+    except (ChunkMapError, OSError, ValueError) as exc:
+        print(f"chunk: {exc}", file=sys.stderr)
+        return 1
+    print(chunks_path)
+    print(map_path)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m harness", description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -122,6 +136,20 @@ def main(argv: list[str] | None = None) -> int:
         metavar="T",
         help="retry failed articles at temperature T > 0 instead of 0 (only with --only)",
     )
+    chunk = commands.add_parser(
+        "chunk", help="chunk the articles with upstream's chunker and write the offset map"
+    )
+    chunk.add_argument(
+        "--fixture",
+        type=Path,
+        default=FIXTURE_DIR,
+        help="directory with articles.jsonl and articles/ (default: the fixture)",
+    )
+    chunk.add_argument(
+        "--out",
+        type=Path,
+        help="where chunks.json and chunk_map.jsonl go (default: the --fixture directory)",
+    )
     args = parser.parse_args(argv)
     if args.command == "generate":
         retry = args.retry_temperature
@@ -131,6 +159,9 @@ def main(argv: list[str] | None = None) -> int:
             generate.error(f"--retry-temperature must be a finite number above 0, not {retry}")
         # Resolve before moving into the work directory.
         args.spec, args.out = args.spec.resolve(), args.out.resolve()
+    if args.command == "chunk":
+        args.fixture = args.fixture.resolve()
+        args.out = args.out.resolve() if args.out is not None else args.fixture
 
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
     make_upstream_importable()
@@ -140,6 +171,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "generate":
         temperature = args.retry_temperature if args.retry_temperature is not None else 0
         return cmd_generate(args.spec, args.out, args.model_revision, args.only, temperature)
+    if args.command == "chunk":
+        return cmd_chunk(args.fixture, args.out)
     return cmd_write_config()
 
 
