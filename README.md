@@ -29,6 +29,10 @@ uv run pytest -q               # tests (offline; network access is blocked)
 
 Secrets go in the environment or a local `.env` (see `.env.example`), never in YAML or the repository.
 
+## Acknowledgements
+
+Retrieval in `rkc` follows LeanRAG, by Yaoze Zhang, Rong Wu, Pinlong Cai, Xiaoman Wang, Guohang Yan, Song Mao, Ding Wang and Botian Shi: "LeanRAG: Knowledge-graph-based generation with semantic aggregation and hierarchical retrieval", AAAI 2026 ([arXiv:2508.10391](https://arxiv.org/abs/2508.10391), code at [KnowledgeXLab/LeanRAG](https://github.com/KnowledgeXLab/LeanRAG)). `rkc` reimplements the published algorithm and contains no code from the upstream repository.
+
 ## License
 
 MIT, see `LICENSE`.
