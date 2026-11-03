@@ -13,7 +13,7 @@ Harness test command (T7): `cd scripts/spikes/leanrag && TIKTOKEN_CACHE_DIR=<wor
   - only allowed file types are present.
 - [ ] V3 (T2, T3, T9): the harness tests for the model adapter and config writer pass (temperature, seed and `enable_thinking` sent on every call through a fake transport, empty responses counted, longest prompt recorded, exactly five config keys, no secret).
 - [ ] V4 (R4, T10): the harness tests for the generator pass (verbatim insertion at paragraph boundaries, exact offsets, idempotent normalisation, duplicate planted string rejected, canaries intact).
-- [ ] V5 (R6): the harness tests for the offset mapper pass (ASCII, multi-byte characters at boundaries with the flagged-window comparison, overlap, short final window, short article, duplicate chunk text, mismatch fails loudly).
+- [ ] V5 (R6): the harness tests for the offset mapper pass (ASCII, multi-byte characters at boundaries (`é`, `—`, `β`, never split) and a flagged-window comparison (`ŝ`, `ꞵ`), overlap, short final window, short article, duplicate chunk text, mismatch fails loudly).
 - [ ] V6 (R9, R10, T13, T14): the harness tests for the build helpers, measurements and judge pass. They cover:
   - build helpers: the build-name check, the SQL-error scanner, the `/metrics` delta parser;
   - measurements: Jaccard and overlap, span recall, case-insensitive canary inside-versus-spread, metacharacter comparison after normalisation, the FTS5 query builder and toy corpus, `tolerance.json` and the parity rule;

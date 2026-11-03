@@ -95,7 +95,7 @@ Its chunker (`file_chunk.chunk_documents`) keeps `{hash_code, text}` only, drops
 - [x] Retry temperature (owner decision after hardening): `generate` takes `--retry-temperature T` (a float above 0, allowed only with `--only`). Those calls use `T` instead of 0 with the configured seed, and `generated_by` records the temperature for every article (0 normally). The failure message and README step 5 point to it. Tests: the flag is refused without `--only` and for `T <= 0`; the fake transport sees `T` on retry calls and 0 otherwise; `generated_by` records it.
 
 ## Group 3: Chunk export and offset map
-- [x] Chunk script: runs upstream's `file_chunk.chunk_documents` unchanged (`max_token_size=1024`, `overlap_token_size=128`, `cl100k_base`) over the articles in ID order. Writes its output unchanged as `chunks.json`, plus `chunk_map.jsonl` with, per chunk, the article ID, window index, token start and end, character start and end into the article text, and a `split_char` flag.
+- [x] Chunk script: runs upstream's `file_chunk.chunk_documents` unchanged (`max_token_size=1024`, `overlap_token_size=128`, `cl100k_base`) over the articles in ID order. Writes its output unchanged as `chunks.json`, plus `chunk_map.jsonl` with, per chunk, the article ID, window index, token start and end, character start and end into the article text, and a `split_char` flag, plus `chunk_index` and `hash_code` so each record joins to `chunks.json` without relying on line order.
 - [x] Offset mapper:
   - Re-encodes each article with the same tiktoken encoding and maps token windows to byte offsets, then to character offsets.
   - A window that starts or ends inside a multi-byte character (whose decoded text then has U+FFFD at that edge) is widened to whole characters and gets `split_char` set.
@@ -103,7 +103,7 @@ Its chunker (`file_chunk.chunk_documents`) keeps `{hash_code, text}` only, drops
   - Verifies that `md5` of the decoded window equals `hash_code`.
   - Maps several chunks with the same `hash_code` to several spans (upstream keys chunks by hash).
   - The number of flagged windows is reported.
-- [x] Tests (harness venv, written first): ASCII text; multi-byte characters (`é`, `—`, `β`) at and across window boundaries, including a flagged window and its edge comparison; overlapping windows; a final short window; an article shorter than one window; duplicate chunk text in two articles giving one `hash_code` with two spans; a span whose post-processed text does not match the chunk text fails loudly.
+- [x] Tests (harness venv, written first): ASCII text; multi-byte characters (`é`, `—`, `β`) at and across window boundaries, which `cl100k_base` never splits, and a flagged window with its edge comparison using characters it does split into byte tokens (`ŝ`, `ꞵ`); overlapping windows; a final short window; an article shorter than one window; duplicate chunk text in two articles giving one `hash_code` with two spans; a span whose post-processed text does not match the chunk text fails loudly.
 
 ## Group 4: Corpus generation, approval and the fixture-integrity test (owner runs the model)
 - [ ] Owner runs the generator with the baseline chat model and reviews a sample of articles. The agent fixes generator problems the review finds and regenerates.
@@ -199,7 +199,7 @@ Its chunker (`file_chunk.chunk_documents`) keeps `{hash_code, text}` only, drops
 
 ## Edge cases
 - The model's prose already contains a planted string, so it would occur twice → the generator fails that article. The owner regenerates it with `--retry-temperature` and another seed (at temperature 0 a new seed alone changes nothing); both are recorded for that article.
-- A tiktoken window boundary falls inside a multi-byte character → the span is widened to whole characters and `split_char` is set. Integrity checks drop the partial character and the U+FFFD at that edge before comparing.
+- A tiktoken window boundary falls inside a multi-byte character → the span is widened to whole characters and `split_char` is set. Integrity checks drop the partial character from the span and the U+FFFD run from the chunk text at that edge, and do not strip the span on that side (upstream's `strip()` stops at the U+FFFD, so whitespace behind it is kept).
 - Two articles produce an identical chunk → one `hash_code` in upstream's dict, several spans in `chunk_map`. Traceability counts it as ambiguous.
 - A chat request fails or exceeds `--max-model-len` → upstream returns `""` silently. The adapter counts it and the build log reports it with the longest prompt. A build with any empty responses is rerun before it counts toward the baseline, unless the owner accepts it and the doc says so. Requests that repeat over the limit on a rerun are a finding about upstream's prompt sizes, not a reason to rerun again.
 - The 32k context with the fp8 KV cache does not fit next to the embedding instance → the owner falls back to 16,384, records it, and over-length requests become findings.
