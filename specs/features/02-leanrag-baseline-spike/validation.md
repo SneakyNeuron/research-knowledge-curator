@@ -44,7 +44,7 @@ Harness test command (T7): `cd scripts/spikes/leanrag && TIKTOKEN_CACHE_DIR=<wor
 ## Manual (human in the loop)
 - [ ] M1 (R1, T1, T5): on the RTX 4090, follow `scripts/spikes/leanrag/README.md` from a clean checkout. Then:
   - setup, the two `vllm serve` commands and `check` succeed;
-  - `check` reports the upstream commit, the MySQL login, the chat model, a 1024-length embedding and both `/metrics` endpoints;
+  - `check` reports the upstream commit, the MySQL login, the chat model, a 1024-length embedding and both `/metrics` endpoints (and whether the embedding instance exports `vllm:generation_tokens_total`);
   - after teardown, `docker volume ls` shows no harness volume.
 - [ ] M2 (R3, R4): read 3 articles, including one canary article and one with a metacharacter name. The prose is coherent finance-evaluation text, planted facts read naturally, and nothing is copied from a real paper you recognise.
 - [ ] M3 (R5): review `questions.yaml`, edit it as needed and set it to `approved` (with the date) before the first baseline build. Confirm it has 15–20 questions, the 3 `fin-model-evaluation` questions from `docs/topics.md` as `seed`, at least 2 `negative` questions, and at least one question for every disagreement pair in `corpus_spec.yaml`.

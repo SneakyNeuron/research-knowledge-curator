@@ -62,15 +62,15 @@ Its chunker (`file_chunk.chunk_documents`) keeps `{hash_code, text}` only, drops
 - [x] Config writer: builds upstream's `config.yaml` with exactly the keys upstream reads (`deepseek.model`, `deepseek.api_key`, `deepseek.base_url`, `glm.model`, `glm.base_url`), using `yaml.safe_dump`, into the work directory. Values come from environment variables. `deepseek.api_key` is a fixed non-secret placeholder, since vLLM runs without `--api-key`. Driver scripts run with that directory as the working directory and upstream on `sys.path`. That means both the clone's root (for `prompt`, `tools` and `database_utils`) and its `GraphExtraction/`, whose `chunk.py` imports `_utils` as a top-level module.
 - [x] Model adapter: an `InstanceManager` from upstream's `tools.utils`, pointed at the chat vLLM instance and wrapped so that every call:
   - adds `temperature=0` and the configured `seed`;
-  - logs the prompt length in tokens and keeps the maximum;
+  - logs the prompt length in `cl100k_base` tokens (measured after the call, on the messages as sent) and keeps the maximum;
   - counts empty responses (upstream swallows request errors, including vLLM rejecting an over-length request, and returns `""`).
-- [x] `check` command: verifies the upstream commit and a clean upstream working tree, a PyMySQL login from the harness venv with upstream's credentials, the chat model answering, the embedding endpoint returning vectors of length 1024, and both instances' `/metrics` endpoints. Fails with a message naming what is wrong.
+- [x] `check` command: verifies the upstream commit and a clean upstream working tree, a PyMySQL login from the harness venv with upstream's credentials, the chat model answering, the embedding endpoint returning vectors of length 1024, and both instances' `/metrics` endpoints (all three counters on the chat instance; on the embedding instance a missing `vllm:generation_tokens_total` is reported, not failed). Fails with a message naming what is wrong.
 - [x] `scripts/spikes/leanrag/pytest.ini`, so the harness's tests do not pick up the repository's pytest configuration (whose `--disable-socket` needs `pytest-socket`). The harness test command, documented in the README and used by V3 to V6: `cd scripts/spikes/leanrag && TIKTOKEN_CACHE_DIR=<work>/tiktoken <venv>/bin/pytest -q`.
 - [x] `README.md` in the harness:
   - prerequisites (Docker, an NVIDIA GPU, vLLM);
   - the two `vllm serve` command lines for one RTX 4090 (memory split, `--max-model-len 32768`, `--kv-cache-dtype fp8`, `--runner pooling` for the embedding model, the dev and baseline chat models), and the 16k fallback;
   - the environment variables and the test command;
-  - the full run order: setup, check, generate, chunk, synthetic builds ×3, queries, measurement, `mix` download, chunk and build, `mix` queries and judge, teardown.
+  - the full run order: setup, check, generate, chunk, synthetic builds ×3, queries, measurement, `mix` download, chunk and build, `mix` queries and judge, teardown. Steps whose commands later groups build are described and marked; each later group adds its command to the README when it builds it.
 - [x] `pyproject.toml`: per-file ignore of `S101` for the harness's tests, so `ruff check .` stays clean.
 - [x] Tests (harness venv, written first): with `requests.post` replaced by a fake transport, the adapter sends `temperature=0`, the configured `seed` and upstream's `enable_thinking: False` on every call, counts an error or empty response, and records the longest prompt. The config writer emits exactly the five keys and no secret.
 
