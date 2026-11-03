@@ -24,7 +24,7 @@ All five must pass before a change is done. `scripts/check.sh` runs them in orde
 | `sources` | arXiv, OpenAlex (full text from provider endpoints), local files | no |
 | `triage` | Relevance check against the approved context (one structured model call) | no |
 | `engines` | Retrieval engine interface | no |
-| `engine_leanrag` | Vendored, adapted LeanRAG: derived, disposable `engines/leanrag/graph.sqlite`, embedded vector index, partial updates; upstream commit and every change in `UPSTREAM.md` | no |
+| `engine_leanrag` | LeanRAG reimplemented from its paper (arXiv:2508.10391): derived, disposable `engines/leanrag/graph.sqlite`, embedded vector index, partial updates; paper-to-module map, the upstream commit compared against and every departure from the paper in `PROVENANCE.md` | no |
 | `run` | Intake runs and locking | no |
 | `schedule` | Crontab scheduling | no |
 
@@ -35,5 +35,5 @@ Commands read `--json` through the pattern in `cli.py`: declare a `json_output: 
 - The original text is the ground truth: it is cached and indexed unchanged, and model-written text (relevance reasons, engine summaries, later notes) is always labelled as generated.
 - The store owns the facts. Changeset IDs, source identity, intake decisions, bans and history come from the store, never from a model or a caller.
 - Scan at every hop: content is scanned before it is stored, indexed or read by the relevance model, and query output is sanitized and, with the output guard on (the default), scanned before it is returned. Input scanning fails closed.
-- Vendored LeanRAG code keeps its MIT notice and meets the same gates as our code; record every change to it in `engine_leanrag/UPSTREAM.md`. It runs in-process, so its model calls follow the rules above: no tools, untrusted text in a provenance-marked block, structured and capped output.
+- Upstream LeanRAG has no license: never copy or closely paraphrase its code or prompt text into the repository (reading it to understand behaviour is fine, and prompts are written fresh). `engine_leanrag` meets the same gates as our code, and `engine_leanrag/PROVENANCE.md` records every deliberate departure from the paper with its measured reason. It runs in-process, so its model calls follow the rules above: no tools, untrusted text in a provenance-marked block, structured and capped output.
 - Secrets never appear in YAML, the store, logs or output. YAML names a key by variable through `api_key_env`; messages name a missing key by its variable, never its value.

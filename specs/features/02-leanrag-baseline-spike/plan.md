@@ -5,7 +5,7 @@ Roadmap phase 2. Phase 8 builds `rkc`'s hierarchical retrieval engine. Its go/no
 - **A synthetic corpus**, committed in full: about 40 articles with known answers, run through three upstream builds. Its run-to-run variance gives the tolerance band.
 - **Upstream's own benchmark**, UltraDomain `mix`: 130 questions over book-length texts, downloaded at a pinned revision and not committed, run through one upstream build. It shows the engine reproduces LeanRAG on the data its paper reports.
 
-**Licence finding (spec review, 2026-11-02).** Upstream has no LICENSE file anywhere in its history; the only MIT claim is a README badge that links to a missing file. The owner decided that phase 8 reimplements LeanRAG from its paper (arXiv 2508.10391) rather than vendoring the code, and credits the paper and repository in the README. The constitution (mission, tech stack, `CLAUDE.md`, roadmap phases 8, 9 and 13) still says "vendored" and is updated by `/sdd:replan` right after this spec is committed. For this phase it means:
+**Licence finding (spec review, 2026-11-02).** Upstream has no LICENSE file anywhere in its history; the only MIT claim is a README badge that links to a missing file. The owner decided that phase 8 reimplements LeanRAG from its paper (arXiv 2508.10391) rather than vendoring the code, and credits the paper and repository in the README. The 2026-11-03 replan updated the constitution (mission, tech stack, `CLAUDE.md`, roadmap phases 8, 9 and 13) from vendoring to reimplementation. For this phase it means:
 - upstream runs only from a local, gitignored clone;
 - no upstream code or prompt text is copied into any committed file;
 - the findings document describes upstream's behaviour in our own words, never by pasting its code or prompts.
@@ -44,7 +44,7 @@ Its chunker (`file_chunk.chunk_documents`) keeps `{hash_code, text}` only, drops
 ## What stays unchanged
 - `src/`, the CLI and `pyproject.toml`'s dependencies. `rkc` gains no runtime or dev dependency. The only `pyproject.toml` change allowed is a ruff per-file ignore for the harness's tests.
 - The CI workflow. The harness's own tests do not run in CI. The main suite's new fixture-integrity test does, since it is part of `pytest`.
-- `specs/mission.md`, `docs/topics.md`, the archived design, and (until `/sdd:replan`) the vendoring wording elsewhere in the constitution.
+- `specs/mission.md`, `docs/topics.md`, and the archived design.
 - The cloned upstream code: no file in it is edited. No upstream code or prompt text is copied into a committed file.
 
 ## Group 1: Harness skeleton, environment and model adapter

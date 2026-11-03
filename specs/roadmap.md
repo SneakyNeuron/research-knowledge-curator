@@ -2,7 +2,7 @@
 
 Each phase is one feature: planned with `/sdd:feature`, built with `/sdd:implement` and closed with `/sdd:validate`. Phases name the sections of the archived design (`specs/backlog/2026-10-28-design-v3.1.md`) worth reading when their feature spec is written. That design predates the 2026-11-02 pivot from claim curation to original-text indexing, so the constitution wins wherever the two differ.
 
-The MVP (phases 1–13) is a secured system that pulls papers, checks them for attacks and relevance, indexes the original text in LeanRAG, and lets agents query it. LeanRAG is the backbone and is vendored into `rkc` (decided in the 2026-11-02 vendoring replan), so its baseline spike comes first: it records the reference behaviour the port must reproduce, and what upstream accepts and returns shapes the store. The classifier evaluation (phase 5's manual task) needs the owner and network access too, and can start alongside phases 2–4.
+The MVP (phases 1–13) is a secured system that pulls papers, checks them for attacks and relevance, indexes the original text in LeanRAG, and lets agents query it. LeanRAG is the backbone and is reimplemented from its paper in `rkc` (upstream has no license; decided in the 2026-11-03 replan), so its baseline spike comes first: it records the reference behaviour our engine must match on outcomes, and what upstream accepts and returns shapes the store. The classifier evaluation (phase 5's manual task) needs the owner and network access too, and can start alongside phases 2–4.
 
 ## Phase 1: Scaffolding ✅
 Spec: specs/features/01-scaffolding/
@@ -63,12 +63,12 @@ Goal: papers from arXiv, OpenAlex and local files arrive as guarded, deduplicate
 - [ ] `rkc add-file --as literature|experiment|note`
 Design reference: "Step 7", "Sources".
 
-## Phase 8: Vendored LeanRAG engine and queries
-Goal: `rkc query` returns sanitized, untrusted-marked results through the vendored LeanRAG, each labelled as verbatim source text or engine-generated, falling back to keyword search.
-- [ ] Vendor upstream at the commit phase 2 recorded into the `engine_leanrag` subpackage, with its MIT notice and `UPSTREAM.md` (commit and every change). Port to our gates (`ruff`, `mypy --strict`), pin its numeric dependencies, model calls through `llm` (extraction, summary and embedding roles), SQLite `graph.sqlite`, and the embedded vector index chosen and recorded here (Milvus Lite 3.x, `sqlite-vec` or brute force)
+## Phase 8: LeanRAG engine (reimplemented) and queries
+Goal: `rkc query` returns sanitized, untrusted-marked results through our LeanRAG reimplementation, each labelled as verbatim source text or engine-generated, falling back to keyword search.
+- [ ] Implement the paper's algorithm in the `engine_leanrag` subpackage with our own code and freshly written prompts, to our gates (`ruff`, `mypy --strict`), with `PROVENANCE.md` (paper citation, upstream repository link and the commit phase 2 compared against, a map from each part of the paper to our module, and every deliberate departure with its measured reason). A clean-room check (`git grep -F` over sample lines of upstream's code and prompts) finds nothing outside `specs/`. Pin its numeric dependencies, model calls through `llm` (extraction, summary and embedding roles), SQLite `graph.sqlite`, and the embedded vector index chosen and recorded here (Milvus Lite 3.x, `sqlite-vec` or brute force)
 - [ ] Enforcement in code for the in-process engine: no tools, provenance-marked untrusted block, structured and capped output, parameterized SQL, keys only from hashes and namespaced IDs
 - [ ] Engine protocol, `Hit` with the verbatim or generated label and source locators, hydration from the store with the output guard, and a reusable contract test with a scripted fake model and deterministic fake embeddings
-- [ ] Full build from the store and cache, `rkc query`, and parity with the phase 2 baselines (`tests/fixtures/leanrag_baseline/`, synthetic and UltraDomain `mix`) under the parity rule approved in phase 2. If the port cannot reach parity, agree a different engine with the owner before continuing. Remove `scripts/spikes/leanrag/` once the port matches
+- [ ] Full build from the store and cache, `rkc query`, and parity with the phase 2 baselines (`tests/fixtures/leanrag_baseline/`, synthetic and UltraDomain `mix`) under the parity rule approved in phase 2. Parity is the go/no-go: if the engine cannot reach it, agree a different engine with the owner before continuing. Remove `scripts/spikes/leanrag/` once the engine reaches parity
 - [ ] CI runs the engine tests on Linux, macOS and Windows
 Design reference: "Step 10", "Engines", "Retrieval", "LeanRAG engine" (Docker, MySQL and Milvus services, unmodified use, `engine install` and the sandboxed build do not apply).
 
@@ -76,7 +76,7 @@ Design reference: "Step 10", "Engines", "Retrieval", "LeanRAG engine" (Docker, M
 Goal: intake keeps the engine current without rebuilding the whole hierarchy, and a full rebuild happens only on request.
 - [ ] Partial update on sync: new sources are chunked, extracted and attached to the nearest existing clusters, retracted sources are removed, and only the ancestors of changed nodes are re-summarized
 - [ ] `rkc engine sync | rebuild | status`, with `status` reporting drift signals (such as updates since the last rebuild)
-- [ ] Measure drift: retrieval after a series of partial updates compared with a fresh full rebuild on the same sources, recorded in `docs/spikes/leanrag.md`
+- [ ] Measure drift: retrieval after a series of partial updates compared with a fresh full rebuild on the same sources, recorded in `docs/spikes/leanrag.md`, and partial updates recorded as a departure from the paper in `engine_leanrag/PROVENANCE.md`
 
 ## Phase 10: Run orchestration
 Goal: `rkc run` executes an agent end to end, idempotently, with clear exit codes.
@@ -99,7 +99,7 @@ Design reference: "Step 13", "Test scenarios", "Injection defense".
 ## Phase 13: Skills, docs, end-to-end check and release
 Goal: a developer installs `rkc` from PyPI and a coding agent sets it up through skills.
 - [ ] `rkc-setup`, `rkc-query`, `rkc-ops`, `rkc-report`, and `rkc skills install --target`
-- [ ] `docs/limits.md` and a finished README (supported platforms, and credit for the vendored LeanRAG with a link to `engine_leanrag/UPSTREAM.md`)
+- [ ] `docs/limits.md` and a finished README (supported platforms, and the LeanRAG credit added in the 2026-11-03 replan, now also linking `engine_leanrag/PROVENANCE.md`)
 - [ ] Automated end-to-end test, a `uv build` wheel that installs with `uv tool install` and runs the engine on Linux, macOS and Windows, and the first PyPI release
 Design reference: "Step 14", "Verification".
 

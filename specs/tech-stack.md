@@ -66,6 +66,6 @@ Exact versions are pinned in `pyproject.toml` and `uv.lock` when each dependency
 - `src/research_knowledge_curator/`: one module per concern (`cli`, `config`, `store`, `cache`, `scan`, `llm`, `sources`, `triage`, `engines`, `engine_leanrag`, `run`, `schedule`). `engine_leanrag` is a subpackage holding our LeanRAG reimplementation and its `PROVENANCE.md`.
 - `skills/`: `rkc-setup`, `rkc-query`, `rkc-ops`, `rkc-report`, installed into a host project by `rkc skills install`.
 - `scripts/`: `check.sh` (every quality gate, plus the tests under CI's colour variables), `scanner_eval.py`, `security_smoke.py`, and `spikes/leanrag/` (the throwaway harness that runs upstream LeanRAG unmodified for the baseline, removed once our engine reaches parity).
-- `tests/`, `tests/fixtures/`, `tests/security/`.
+- `tests/`, `tests/fixtures/` (including `leanrag_baseline/`, the phase 2 parity baseline), `tests/security/`.
 - `docs/`: `topics.md`, `limits.md`, and `spikes/` for recorded spike results.
 - `specs/`: this constitution, feature specs, and the backlog (including the archived design v3.1, which predates the 2026-11-02 pivot from claim curation to original-text indexing; the constitution wins where they differ).
